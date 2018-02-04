@@ -1,3 +1,4 @@
+
 def read_in_data(file_name):
     sents = []
     infile = open(file_name)
