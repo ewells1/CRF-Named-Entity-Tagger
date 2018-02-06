@@ -146,3 +146,12 @@ if __name__ == '__main__':
     print(y_test)
     print(y_pred)
     print(metrics.flat_f1_score(y_test, y_pred, average='weighted', labels=labels))
+
+    # Output to a file to use with evaluate_ner.py
+    outfile = open('dev.pred', 'w')
+    for i in range(len(y_pred)):
+        for j in range(len(y_pred[i])):
+            word = test_sents[i][j]
+            outfile.write('\t'.join([str(j), word[0], word[1], y_pred[i][j]]) + '\n')
+        outfile.write('\n')
+    outfile.close()
