@@ -1,12 +1,18 @@
 import sklearn_crfsuite
 from sklearn_crfsuite import metrics
 import brown_driver
-
+import math
+import json
 
 class Tagger:
     def __init__(self):
         self.brown_clusters = brown_driver.cluster_driver()
-        self.brown_clusters.init_clusters('paths')
+        self.brown_clusters.init_clusters('paths_100')
+        self.import_wiki_data('wiki_outfile.json')
+
+    def import_wiki_data(self, wiki_import):
+        wiki_data = open(wiki_import, 'r')
+        self.wiki_data = json.load(wiki_data)
 
     def read_in_data(self, file_name):
         sents = []
@@ -22,6 +28,17 @@ class Tagger:
         infile.close()
         return sents
 
+    def get_length_bucket(self, word):
+        return math.floor(len(word)/10)
+
+    def check_wiki(self, word):
+        if word in self.wiki_data:
+            if self.wiki_data[word]:
+                return 1
+            else:
+                return 0
+        else:
+            return -1
 
     def word2features(self, sent, i):
         word = sent[i][0]
@@ -37,6 +54,11 @@ class Tagger:
             'word.isdigit()': word.isdigit(),
             'postag': postag,
             'postag[:2]': postag[:2],
+            'brown_cluster' : self.brown_clusters.get_cluster(word.lower()),
+            'prefix' : word[:5],
+            'suffix' : word[-5:],
+            'wikipedia' : self.check_wiki(word)
+            # 'length' : self.get_length_bucket(word)
         }
         if i > 0:
             word1 = sent[i-1][0]
@@ -47,6 +69,9 @@ class Tagger:
                 '-1:word.isupper()': word1.isupper(),
                 '-1:postag': postag1,
                 '-1:postag[:2]': postag1[:2],
+                '-1:brown_cluster' : self.brown_clusters.get_cluster(word1.lower()),
+                '-1:prefix' : word1[:5],
+                '-1:suffix' : word1[-5:]
             })
         else:
             features['BOS'] = True
@@ -60,10 +85,12 @@ class Tagger:
                 '+1:word.isupper()': word1.isupper(), #this basically checks for acronyms ?
                 '+1:postag': postag1,
                 '+1:postag[:2]': postag1[:2],
+                '+1:brown_cluster': self.brown_clusters.get_cluster(word1.lower()),
+                '+1:prefix': word1[:5],
+                '+1:suffix': word1[-5:]
             })
         else:
             features['EOS'] = True
-        # features['brown_cluster'] = self.brown_clusters.get_cluster(word.lower())
 
         return features
 
