@@ -1,8 +1,14 @@
 import sklearn_crfsuite
 from sklearn_crfsuite import metrics
+from nltk.corpus import gazetteers, names
+
 import brown_driver
 import math
 import json
+
+locations = gazetteers.words()
+proper_names = names.words()
+
 
 class Tagger:
     def __init__(self):
@@ -40,15 +46,19 @@ class Tagger:
         else:
             return -1
 
+
     def word2features(self, sent, i):
         word = sent[i][0]
         postag = sent[i][1]
 
         features = {
             'bias': 1.0,
-            'word.lower()': word.lower(),
+            # 'word.lower()': word.lower(),
+            'word': word,
             'word[-3:]': word[-3:],
             'word[-2:]': word[-2:],
+            'word[:2]': word.lower()[:2],
+            'word[:3]': word.lower()[:3],
             'word.isupper()': word.isupper(),
             'word.istitle()': word.istitle(),
             'word.isdigit()': word.isdigit(),
@@ -92,6 +102,10 @@ class Tagger:
         else:
             features['EOS'] = True
 
+        features['in_locations'] = word in locations
+        # features['in_names'] = word in proper_names
+
+
         return features
 
 
@@ -117,8 +131,9 @@ if __name__ == '__main__':
     y_test = [tagger.sent2labels(s) for s in test_sents]
 
     crf = sklearn_crfsuite.CRF(
-        algorithm='lbfgs',
-        c1=0.1,
+        algorithm='l2sgd',
+        # algorithm='lbfgs',
+        # c1=0.1,
         c2=0.1,
         max_iterations=100,
         all_possible_transitions=True
