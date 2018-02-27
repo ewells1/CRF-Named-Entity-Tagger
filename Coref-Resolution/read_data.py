@@ -13,6 +13,12 @@ class ConllCorpus:
             self.docs.append(ConllFile(path + '/' + file))
 
 
+# Reads in .conll file and stores information
+# self.words is a list of all words in the document in order
+# self.trees is a list of trees for every sentence in the document in order
+# self.nes is a list of named entities in the document in the form [(tag, (start, end), text), ...]
+# self.clusters is a dictionary of all the ne clusters in the document in the form
+#     {cluster_num: [((start, end), text), ...], ...}
 class ConllFile:
     def __init__(self, file_name):
         ifile = codecs.open(file_name)
@@ -20,13 +26,16 @@ class ConllFile:
 
         self.words = []
         self.trees = []
+        self.nes = []
+        current_ne = []
         self.clusters = defaultdict(list)
         temp_clusters = []
 
-        u = re.compile(r'\((\d+)\)')
-        b = re.compile(r'\((\d+)')
-        l = re.compile(r'(\d+)\)')
+        u = re.compile(r'\(([\d\w\-*]+)\)')
+        b = re.compile(r'\(([\d\w\-*]+)')
+        l = re.compile(r'([\d\w\-*]+)\)')
 
+        i = 0
         for line in ifile.readlines():
             columns = line.split()
             if len(columns) < 3:
@@ -40,6 +49,24 @@ class ConllFile:
                 self.trees.append('')
             self.trees[-1] += columns[5].replace('*', ' ' + word)
 
+            if len(current_ne) > 0:
+                current_ne.append(word)
+
+            ne = columns[-3]
+            u_ne = u.search(ne)
+            b_ne = b.search(ne)
+            l_ne = l.search(ne)
+
+            if u_ne:
+                self.nes.append((u_ne.group(1).strip('*'), (i, i + 1), word))
+            elif b_ne:
+                if len(current_ne) > 0:
+                    print('PROBLEM: NESTED NES')
+                current_ne = [b_ne.group(1).strip('*'), i, word]
+            elif l_ne:
+                self.nes.append((current_ne[0], (current_ne[1], i + 1), ' '.join(current_ne[2:])))
+                current_ne = []
+
             for cluster in temp_clusters:
                 cluster.append(word)
 
@@ -50,13 +77,13 @@ class ConllFile:
                 l_cl = l.search(part)
 
                 if u_cl:
-                    self.clusters[u_cl.group(1)].append(word)
+                    self.clusters[u_cl.group(1)].append(((i, i+1), word))
                 elif b_cl:
-                    temp_clusters.append([b_cl.group(1), word])
+                    temp_clusters.append([b_cl.group(1), i, word])
                 elif l_cl:
                     finished = temp_clusters.pop()
-                    print(finished)
-                    self.clusters[finished[0]].append(' '.join(finished[1:]))
+                    self.clusters[finished[0]].append(((finished[1], i+1), ' '.join(finished[2:])))
+            i += 1
 
     def nps(self):
         nps = []
@@ -103,5 +130,6 @@ if __name__ == '__main__':
     # corpus.add_data(train)
 
     file = ConllFile('conll-2012/train/a2e_0001.v4_auto_conll')
+    print(file.nes)
     print(file.clusters)
     print(file.nps())
