@@ -1,4 +1,4 @@
 brown-cluster/
 tan-clustering/
-dev*
-train*
+CRF-Named-Entity-Tagger/dev*
+CRF-Named-Entity-Tagger/train*
