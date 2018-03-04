@@ -1,6 +1,7 @@
 import pdb
 import sys
 import os
+import gensim
 
 import numpy as np
 # import theano
@@ -25,6 +26,9 @@ else:
     output_vocab_size = 46 
     max_sent_len = 242
 
+
+#load word2vec model
+embed_model = gensim.Word2Vec.load("word2vec_model")
 
 def transform(y):
     ''' Transforms every training instance in y from 
@@ -93,6 +97,8 @@ def bi_lstm(X_train, y_train, X_test, y_test):
     model.add(Bidirectional(LSTM(lstm_size, return_sequences=True)))
     model.add(TimeDistributed(Dense(output_vocab_size + 1, activation='softmax')))
 
+    #add in attention layer here from https://gist.github.com/cbaziotis/7ef97ccf71cbc14366835198c09809d2
+
     model.compile(
         #loss='mse',
         loss='categorical_crossentropy',
@@ -110,14 +116,19 @@ def bi_lstm(X_train, y_train, X_test, y_test):
 
     return model.predict_classes(X_test, batch_size=batch_size, verbose=1)
 
+def embed(word):
+    return(embed_model.wv[word])
 
 if __name__ == '__main__':
     data_dir = sys.argv[2]
 
     print('{}\t{}'.format(toy_run, data_dir))
 
-    X_data = os.path.join(data_dir, 'treebank.word.index')
-    y_data = os.path.join(data_dir, 'treebank.tag.index')
+    #load in conll data here and convert to word vectors
+
+
+    X_data = os.path.join(data_dir, 'treebank.word.index') #list of word vectors
+    y_data = os.path.join(data_dir, 'treebank.tag.index') #list of tag vectors
 
     X_train, y_train, X_test, y_test = load_data(X_data, y_data)
 

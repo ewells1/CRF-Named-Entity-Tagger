@@ -2,3 +2,5 @@ brown-cluster/
 tan-clustering/
 CRF-Named-Entity-Tagger/dev*
 CRF-Named-Entity-Tagger/train*
+
+AttentionWithContext.py

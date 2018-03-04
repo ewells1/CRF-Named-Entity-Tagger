@@ -37,6 +37,8 @@ class ConllFile:
 
         i = 0
         for line in ifile.readlines():
+            if line[0] == '#': #skipping intro lines (#begin document, #end document
+                continue
             columns = line.split()
             if len(columns) < 3:
                 continue
@@ -129,7 +131,8 @@ if __name__ == '__main__':
     # corpus = ConllCorpus()
     # corpus.add_data(train)
 
-    file = ConllFile('conll-2012/train/a2e_0001.v4_auto_conll')
+    file = ConllFile('conll-2012/train/a2e_0003.v4_auto_conll')
     print(file.nes)
     print(file.clusters)
     print(file.nps())
+    print([item.word for item in file.words])
