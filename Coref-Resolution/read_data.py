@@ -2,15 +2,39 @@ import os
 import codecs
 from collections import defaultdict
 import re
+import numpy as np
+from sklearn.feature_extraction.text import CountVectorizer
 
 
 class ConllCorpus:
     def __init__(self):
         self.docs = []
 
-    def add_data(self, path):
+    def add_data(self, path, limit=None):
+        i = 0
         for file in os.listdir(path):
             self.docs.append(ConllFile(path + '/' + file))
+            i += 1
+            if limit and i >= limit:
+                break
+
+    def to_matrices(self):
+        doc_texts = [' '.join([word.word for word in doc.words]) for doc in self.docs]
+        vectorizer = CountVectorizer()
+        doc_vecs = vectorizer.fit_transform(doc_texts)
+        num_labels = max(max(word.clusters) for doc in self.docs for word in doc.words if len(word.clusters) > 0)
+        max_words = max(len(doc.words) for doc in self.docs)
+        print(len(self.docs), max_words, num_labels)
+        cluster_vecs = np.zeros((len(self.docs), max_words, num_labels + 1))
+        for i in range(len(self.docs)):
+            doc_vec = np.zeros((max_words, num_labels + 1))
+            for j in range(len(self.docs[i].words)):
+                word_vec = np.zeros(num_labels + 1)
+                for k in self.docs[i].words[j].clusters:
+                    word_vec[k] = 1
+                doc_vec[j, :] = word_vec
+            cluster_vecs[i, :, :] = doc_vec
+        return doc_vecs, cluster_vecs
 
 
 # Reads in .conll file and stores information
@@ -21,7 +45,7 @@ class ConllCorpus:
 #     {cluster_num: [((start, end), text), ...], ...}
 class ConllFile:
     def __init__(self, file_name):
-        ifile = codecs.open(file_name)
+        ifile = codecs.open(file_name, encoding='utf8')
         ifile.readline()  # header
 
         self.words = []
@@ -30,6 +54,7 @@ class ConllFile:
         current_ne = []
         self.clusters = defaultdict(list)
         temp_clusters = []
+        self.cluster_matrix = []
 
         u = re.compile(r'\(([\d\w\-*]+)\)')
         b = re.compile(r'\(([\d\w\-*]+)')
@@ -37,15 +62,12 @@ class ConllFile:
 
         i = 0
         for line in ifile.readlines():
-            if line[0] == '#': #skipping intro lines (#begin document, #end document
+            if line[0] == '#':  # skipping intro lines (#begin document, #end document
                 continue
             columns = line.split()
-            if len(columns) < 3:
-                continue
             word = columns[3]
             lemma = columns[6] if columns[6] != '-' else None
             pos = columns[4]
-            self.words.append(Word(word, lemma, pos))
 
             if columns[2] == '0':
                 self.trees.append('')
@@ -69,8 +91,10 @@ class ConllFile:
                 self.nes.append((current_ne[0], (current_ne[1], i + 1), ' '.join(current_ne[2:])))
                 current_ne = []
 
+            word_clusters = []
             for cluster in temp_clusters:
                 cluster.append(word)
+                word_clusters.append(int(cluster[0]))
 
             cluster_parts = columns[-1].split('|')
             for part in cluster_parts:
@@ -80,11 +104,15 @@ class ConllFile:
 
                 if u_cl:
                     self.clusters[u_cl.group(1)].append(((i, i+1), word))
+                    word_clusters.append(int(u_cl.group(1)))
                 elif b_cl:
                     temp_clusters.append([b_cl.group(1), i, word])
+                    word_clusters.append(int(b_cl.group(1)))
                 elif l_cl:
                     finished = temp_clusters.pop()
                     self.clusters[finished[0]].append(((finished[1], i+1), ' '.join(finished[2:])))
+
+            self.words.append(Word(word, lemma, pos, word_clusters))
             i += 1
 
     def nps(self):
@@ -116,23 +144,25 @@ class ConllFile:
 
 
 class Word:
-    def __init__(self, word, lemma, pos):
+    def __init__(self, word, lemma, pos, clusters):
         self.word = word
         self.lemma = lemma
         self.pos = pos
+        self.clusters = clusters
 
 
 if __name__ == '__main__':
-    # root = 'C:/Users/Elizabeth/PycharmProjects/InformationExtraction/Project2/conll-2012/'
-    # dev = root + 'dev/'
-    # test = root + 'test/'
-    # train = root + 'train/'
-    #
-    # corpus = ConllCorpus()
-    # corpus.add_data(train)
+    root = 'C:/Users/Elizabeth/PycharmProjects/InformationExtraction/Project2/conll-2012/'
+    dev = root + 'dev/'
+    test = root + 'test/'
+    train = root + 'train/'
 
-    file = ConllFile('conll-2012/train/a2e_0003.v4_auto_conll')
-    print(file.nes)
-    print(file.clusters)
-    print(file.nps())
-    print([item.word for item in file.words])
+    corpus = ConllCorpus()
+    corpus.add_data(train, limit=100)
+    corpus.to_matrices()
+
+    # file = ConllFile('conll-2012/train/a2e_0001.v4_auto_conll')
+    # print(file.nes)
+    # print(file.clusters)
+    # print(file.nps())
+    # print([item.word for item in file.words])
