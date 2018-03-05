@@ -9,7 +9,7 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Embedding, LSTM
 from keras.layers import Bidirectional
-from keras.layers import Dense, TimeDistributed
+from keras.layers import Dense, Flatten, TimeDistributed
 from keras.preprocessing import sequence
 
 
@@ -82,27 +82,31 @@ def bi_lstm(X_train, y_train, X_test, y_test):
     print('building model ...')
     model = Sequential()
 
-    X_train = np.reshape(X_train, (X_train.shape[0], 1, X_train.shape[1]))
-    X_test = np.reshape(X_test, (X_test.shape[0], 1, X_test.shape[1]))
+    # X_train = np.reshape(X_train, (X_train.shape[0], 1, X_train.shape[1]))
+    # X_test = np.reshape(X_test, (X_test.shape[0], 1, X_test.shape[1]))
 
+    print(y_train.shape)
     print(X_train.shape)
     if toy_run:
         # setup for the network
         embedding_size = 30
         lstm_size = 30
-        batch_size = 5 
-        nb_epoch = 1 
+        batch_size = 5
+        nb_epoch = 1
     else:
         # setup for the network
         embedding_size = 20 #size of the word embeddings
         lstm_size = 300
         batch_size = 100
-        nb_epoch = 5 
+        nb_epoch = 5
 
+    model.add(Dense(20, activation='relu', input_dim=20))
+    model.add(Dense(1, activation='softmax'))
     # model.add(Embedding(input_vocab_size + 1, embedding_size, input_length=max_sent_len))
-    model.add(Bidirectional(LSTM(lstm_size, return_sequences=True), input_shape=(1, embedding_size)))
-    # model.add(LSTM(lstm_size, input_shape=(1, 20), return_sequences=True))
-    model.add(TimeDistributed(Dense(1, activation='softmax')))
+    # model.add(Bidirectional(LSTM(lstm_size, return_sequences=True), input_shape=(1, embedding_size)))
+    # # model.add(LSTM(lstm_size, input_shape=(1, 20), return_sequences=True))
+    # model.add(Flatten())
+    # model.add(TimeDistributed(Dense(100, activation='softmax')))
 
     #add in attention layer here from https://gist.github.com/cbaziotis/7ef97ccf71cbc14366835198c09809d2
 
