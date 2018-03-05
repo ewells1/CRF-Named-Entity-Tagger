@@ -14,7 +14,7 @@ from keras.preprocessing import sequence
 
 
 toy_run = True if sys.argv[1] == 'toy' else False
-
+save_dir = sys.argv[4]
 if toy_run:
     # statistics from the gold data (both training and test data)
     input_vocab_size = 12408 
@@ -24,7 +24,7 @@ else:
     # statistics from the gold data (both training and test data)
     input_vocab_size = 12408
     output_vocab_size = 46 
-    max_sent_len = 242
+    max_sent_len = 20
 
 
 #load word2vec model
@@ -65,21 +65,27 @@ def load_data(X_data, y_data, ratio=0.9):
     print('transforming y ...')
     y = transform(y)
 
-    train_size = int(len(X) * ratio)
+    # train_size = int(len(X) * ratio)
+    #
+    # X_train = X[:train_size]
+    # y_train = y[:train_size]
+    #
+    # X_test = X[train_size:]
+    # y_test = y[train_size:]
 
-    X_train = X[:train_size]
-    y_train = y[:train_size]
+    # return X_train, y_train, X_test, y_test
 
-    X_test = X[train_size:]
-    y_test = y[train_size:]
-
-    return X_train, y_train, X_test, y_test
+    return X, y
 
 
 def bi_lstm(X_train, y_train, X_test, y_test):
     print('building model ...')
     model = Sequential()
 
+    X_train = np.reshape(X_train, (X_train.shape[0], 1, X_train.shape[1]))
+    X_test = np.reshape(X_test, (X_test.shape[0], 1, X_test.shape[1]))
+
+    print(X_train.shape)
     if toy_run:
         # setup for the network
         embedding_size = 30
@@ -88,33 +94,43 @@ def bi_lstm(X_train, y_train, X_test, y_test):
         nb_epoch = 1 
     else:
         # setup for the network
-        embedding_size = 300
+        embedding_size = 20 #size of the word embeddings
         lstm_size = 300
         batch_size = 100
         nb_epoch = 5 
 
-    model.add(Embedding(input_vocab_size + 1, embedding_size, input_length=max_sent_len))
-    model.add(Bidirectional(LSTM(lstm_size, return_sequences=True)))
-    model.add(TimeDistributed(Dense(output_vocab_size + 1, activation='softmax')))
+    # model.add(Embedding(input_vocab_size + 1, embedding_size, input_length=max_sent_len))
+    model.add(Bidirectional(LSTM(lstm_size, return_sequences=True), input_shape=(1, embedding_size)))
+    # model.add(LSTM(lstm_size, input_shape=(1, 20), return_sequences=True))
+    model.add(TimeDistributed(Dense(1, activation='softmax')))
 
     #add in attention layer here from https://gist.github.com/cbaziotis/7ef97ccf71cbc14366835198c09809d2
 
     model.compile(
         #loss='mse',
-        loss='categorical_crossentropy',
+        loss='binary_crossentropy',
         optimizer='rmsprop',
         metrics=['accuracy'],
     )
+
+    for layer in model.layers:
+        print("input")
+        print(layer.input_shape)
+
+        print("output")
+        print(layer.output_shape)
+        print('\n\n')
 
     print('fitting model ...')
     model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=nb_epoch, validation_data=[X_test, y_test])
 
     print('saving model ...')
-    model.save_weights(os.path.join(data_dir, 'pos.model.weights'))
-    open(os.path.join(data_dir, 'pos.model.architecture'), 'w').write(
+    model.save_weights(os.path.join(save_dir, 'mention.model.weights'))
+    open(os.path.join(save_dir, 'mention.model.architecture'), 'w').write(
         model.to_yaml())
 
     return model.predict_classes(X_test, batch_size=batch_size, verbose=1)
+
 def get_word_clusters(conll_file):
     current_clusters = []
     possible_spans = {}
@@ -148,12 +164,18 @@ def get_word_clusters(conll_file):
 def ffnn(X_train, y_train, X_test, y_test):
     pass
 
-def embed(training_data, L):
+def embed_mentions(training_data, L):
     labels = []
     spans = []
+
+    toy_data = 100
+    counter = 0
     with open('word_vectors', 'w') as wv_file:
         with open('tag_vectors', 'w') as span_file:
             for file in os.listdir(training_data):
+                if counter == toy_data:
+                    break
+                counter +=1
                 print(file)
                 conll_file = read_data.ConllFile(os.path.join(training_data, file))
                 # find all word clusters
@@ -172,13 +194,21 @@ def embed(training_data, L):
                     for size in range(2, L):
                         if size + index <= max:
                             words = ' '.join([item.word for item in all_words[index:size]])
-                            spans.append(np.sum([embed_model.wv[item.word.lower()] if item.word.lower() in embed_model.wv else [0] for item in all_words[index:size] ]))
+                            intermediate_val = [embed_model.wv[item.word.lower()] if item.word.lower() in embed_model.wv else [0 for index in range(20)] for item in all_words[index:size]]
+                            sum_val = np.sum(intermediate_val, 0)
+                            if np.size(sum_val) != 20:
+                                continue
+                            spans.append(sum_val)
 
+                            found_in_cluster = False
                             for span in all_clusters:
                                 if words in span:
-                                    labels.append(1)
-                                else:
-                                    labels.append(0)
+                                    found_in_cluster = True
+                                    break
+                            if found_in_cluster:
+                                labels.append(1)
+                            else:
+                                labels.append(0)
 
     return (spans, labels)
 
@@ -189,16 +219,30 @@ if __name__ == '__main__':
     print('{}\t{}'.format(toy_run, train_dir))
 
     #load in conll data here and convert to word vectors
-    X_train, y_train = embed(train_dir, 3)
-    X_test, y_test = embed(test_dir, 3)
-
-    # X_data = os.path.join(data_dir, 'treebank.word.index') #list of word vectors
-    # y_data = os.path.join(data_dir, 'treebank.tag.index') #list of tag vectors
+    # X_train, y_train = embed_mentions(train_dir, 10)
+    # X_test, y_test = embed_mentions(test_dir, 10)
     #
-    # X_train, y_train, X_test, y_test = load_data(X_data, y_data)
+    # print('saving npy files...')
+    # items = [X_train, y_train, X_test, y_test]
+    # names = ['X_train.npy', 'y_train.npy', 'X_test.npy', 'y_test.npy']
+    #
+    # for index, name in enumerate(names):
+    #     # with open(name, 'w') as file:
+    #     #     for entry in items[index]:
+    #     #         file.write(str(entry))
+    #     np.save(name, items[index])
 
 
-    predicted_sequences = bi_lstm(X_train, y_train, X_test, y_test)
+    #X_train = np.array([np.array([float(num) for num in line.split()[1:]]) for line in open('X_train').read().split(']')])
+    X_train = np.vstack((np.load('X_train.npy')))
+    X_test = np.vstack((np.load('X_test.npy')))
+
+    y_train = np.vstack((np.load('y_train.npy')))
+    y_test = np.vstack((np.load('y_test.npy')))
+
+
+
+    predicted_sequences = bi_lstm(X_train[:100], y_train[:100], X_test[:100], y_test[:100])
 
     print('outputing prediction ...')
     # f = open(os.path.join(data_dir, 'treebank.test.auto'), 'w')
