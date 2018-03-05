@@ -1,11 +1,13 @@
 import keras
 from keras.models import Sequential
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
-
-from Project2.read_data import ConllCorpus
+from keras.layers import Conv1D, MaxPooling1D, Flatten, Dense
+import numpy as np
+# from Project2.read_data import ConllCorpus
+from read_data import ConllCorpus
 
 if __name__ == '__main__':
-    root = 'C:/Users/Elizabeth/PycharmProjects/InformationExtraction/Project2/conll-2012/'
+    # root = 'C:/Users/Elizabeth/PycharmProjects/InformationExtraction/Project2/conll-2012/'
+    root = '/Users/sspala/dev/Information-Extraction/Coref-Resolution/conll-2012/'
     dev = root + 'dev/'
     test = root + 'test/'
     train = root + 'train/'
@@ -18,13 +20,16 @@ if __name__ == '__main__':
     dev_corpus.add_data(train, limit=10)
     x_dev, y_dev = train_corpus.to_matrices()
 
+
+    print(x_train.shape)
     model = Sequential()
-    model.add(Conv2D(32, kernel_size=(5, 5), strides=(1, 1),
+    model.add(Conv1D(32, 5, #this needs to be a 1d cnn if we do a cnn - train data is only 2D
                      activation='relu',
-                     input_shape=x_train.shape))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-    model.add(Conv2D(64, (5, 5), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+                     #input_shape=x_train.shape))
+                     input_shape=(8024, 1)))
+    model.add(MaxPooling1D(pool_size=2, strides=2))
+    model.add(Conv1D(64, 5, activation='relu'))
+    model.add(MaxPooling1D(pool_size=2))
     model.add(Flatten())
     model.add(Dense(1000, activation='relu'))
     model.add(Dense(y_train.shape[2], activation='softmax'))

@@ -18,7 +18,7 @@ def load_sentences(training_data):
     for file in os.listdir(training_data):
         #create conll file object
         conll_file = read_data.ConllFile(os.path.join(training_data, file))
-        sentences.append(' '.join([item.word for item in conll_file.words]))
+        sentences.append(' '.join([item.word.lower() for item in conll_file.words]))
         # sentences.append(nltk.tokenize.word_tokenize(entry['Arg1']['RawText'].lower()))
         # sentences.append(nltk.tokenize.word_tokenize(entry['Arg2']['RawText'].lower()))
     return sentences

@@ -117,8 +117,8 @@ def bi_lstm(X_train, y_train, X_test, y_test):
     return model.predict_classes(X_test, batch_size=batch_size, verbose=1)
 def get_word_clusters(conll_file):
     current_clusters = []
-    possible_spans = []
-    actual_spans = []
+    possible_spans = {}
+    actual_clusters = {}
 
     #this needs to be a tree traversal instead
 
@@ -128,21 +128,25 @@ def get_word_clusters(conll_file):
 
         for possible_cluster in current_clusters:
             if possible_cluster not in clusters:
-                actual_spans.append(possible_spans.pop(0))
+
+                if possible_cluster in actual_clusters:
+                    actual_clusters[possible_cluster].append(possible_spans[possible_cluster])
+                else:
+                    actual_clusters[possible_cluster] = [possible_spans[possible_cluster]]
                 current_clusters.remove(possible_cluster)
 
         for index,cluster_num in enumerate(clusters):
             if cluster_num not in current_clusters:
                 current_clusters.append(cluster_num) #if its not already being watched, then add it to the cluster
-                possible_spans.append([word])
+                possible_spans[cluster_num] = ([word])
             else:
-                possible_spans[index].append(word)
+                possible_spans[cluster_num].append(word)
 
-    return_spans = []
-    for span in actual_spans:
-        if len(span) > 1:
-            return_spans.append(' '.join(span))
-    return return_spans
+
+    return actual_clusters
+
+def ffnn(X_train, y_train, X_test, y_test):
+    pass
 
 def embed(training_data, L):
     labels = []
@@ -150,16 +154,18 @@ def embed(training_data, L):
     with open('word_vectors', 'w') as wv_file:
         with open('tag_vectors', 'w') as span_file:
             for file in os.listdir(training_data):
+                print(file)
                 conll_file = read_data.ConllFile(os.path.join(training_data, file))
                 # find all word clusters
 
-                all_spans = get_word_clusters(conll_file)
+                all_clusters = get_word_clusters(conll_file)
                 # instead of just giving the word, give an arbitrary sized span, with label 1 or 0
                 max = len(conll_file.words)
 
-                # Mary had a little lamb
                 all_words = conll_file.words
-                # [Mary had | Mary had a ]| had a | had a little | a little |
+                all_clusters = list(all_clusters.values())
+                all_clusters = [[' '.join(span) for span in words] for words in all_clusters]
+
                 words = np.array(L)
                 for index,item in enumerate(all_words):
                     #just using a summed sentence embedding here
@@ -168,10 +174,11 @@ def embed(training_data, L):
                             words = ' '.join([item.word for item in all_words[index:size]])
                             spans.append(np.sum([embed_model.wv[item.word.lower()] if item.word.lower() in embed_model.wv else [0] for item in all_words[index:size] ]))
 
-                            if words in all_spans:
-                                labels.append(1)
-                            else:
-                                labels.append(0)
+                            for span in all_clusters:
+                                if words in span:
+                                    labels.append(1)
+                                else:
+                                    labels.append(0)
 
     return (spans, labels)
 
