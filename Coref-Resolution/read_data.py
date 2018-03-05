@@ -65,6 +65,8 @@ class ConllFile:
             if line[0] == '#':  # skipping intro lines (#begin document, #end document
                 continue
             columns = line.split()
+            if len(columns) == 0:
+                continue
             word = columns[3]
             lemma = columns[6] if columns[6] != '-' else None
             pos = columns[4]
@@ -152,16 +154,18 @@ class Word:
 
 
 if __name__ == '__main__':
-    root = 'C:/Users/Elizabeth/PycharmProjects/InformationExtraction/Project2/conll-2012/'
-    dev = root + 'dev/'
-    test = root + 'test/'
-    train = root + 'train/'
+    # root = 'C:/Users/Elizabeth/PycharmProjects/InformationExtraction/Project2/conll-2012/'
+    # dev = root + 'dev/'
+    # test = root + 'test/'
+    # train = root + 'train/'
 
-    corpus = ConllCorpus()
-    corpus.add_data(train, limit=100)
-    corpus.to_matrices()
+    # corpus = ConllCorpus()
+    # corpus.add_data(train, limit=100)
+    # corpus.to_matrices()
 
-    # file = ConllFile('conll-2012/train/a2e_0001.v4_auto_conll')
+    file = ConllFile('conll-2012/train/a2e_0001.v4_auto_conll')
+    print(file.words[1:4])
+    print([(word.word, word.clusters) for word in file.words])
     # print(file.nes)
     # print(file.clusters)
     # print(file.nps())

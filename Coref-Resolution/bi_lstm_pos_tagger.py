@@ -2,7 +2,7 @@ import pdb
 import sys
 import os
 import gensim
-
+import read_data
 import numpy as np
 # import theano
 
@@ -28,7 +28,7 @@ else:
 
 
 #load word2vec model
-embed_model = gensim.Word2Vec.load("word2vec_model")
+embed_model = gensim.models.Word2Vec.load("word2vec_model")
 
 def transform(y):
     ''' Transforms every training instance in y from 
@@ -115,27 +115,86 @@ def bi_lstm(X_train, y_train, X_test, y_test):
         model.to_yaml())
 
     return model.predict_classes(X_test, batch_size=batch_size, verbose=1)
+def get_word_clusters(conll_file):
+    current_clusters = []
+    possible_spans = []
+    actual_spans = []
 
-def embed(word):
-    return(embed_model.wv[word])
+    #this needs to be a tree traversal instead
+
+    for word_obj in conll_file.words:
+        word = word_obj.word
+        clusters = word_obj.clusters
+
+        for possible_cluster in current_clusters:
+            if possible_cluster not in clusters:
+                actual_spans.append(possible_spans.pop(0))
+                current_clusters.remove(possible_cluster)
+
+        for index,cluster_num in enumerate(clusters):
+            if cluster_num not in current_clusters:
+                current_clusters.append(cluster_num) #if its not already being watched, then add it to the cluster
+                possible_spans.append([word])
+            else:
+                possible_spans[index].append(word)
+
+    return_spans = []
+    for span in actual_spans:
+        if len(span) > 1:
+            return_spans.append(' '.join(span))
+    return return_spans
+
+def embed(training_data, L):
+    labels = []
+    spans = []
+    with open('word_vectors', 'w') as wv_file:
+        with open('tag_vectors', 'w') as span_file:
+            for file in os.listdir(training_data):
+                conll_file = read_data.ConllFile(os.path.join(training_data, file))
+                # find all word clusters
+
+                all_spans = get_word_clusters(conll_file)
+                # instead of just giving the word, give an arbitrary sized span, with label 1 or 0
+                max = len(conll_file.words)
+
+                # Mary had a little lamb
+                all_words = conll_file.words
+                # [Mary had | Mary had a ]| had a | had a little | a little |
+                words = np.array(L)
+                for index,item in enumerate(all_words):
+                    #just using a summed sentence embedding here
+                    for size in range(2, L):
+                        if size + index <= max:
+                            words = ' '.join([item.word for item in all_words[index:size]])
+                            spans.append(np.sum([embed_model.wv[item.word.lower()] if item.word.lower() in embed_model.wv else [0] for item in all_words[index:size] ]))
+
+                            if words in all_spans:
+                                labels.append(1)
+                            else:
+                                labels.append(0)
+
+    return (spans, labels)
 
 if __name__ == '__main__':
-    data_dir = sys.argv[2]
+    train_dir = sys.argv[2]
+    test_dir = sys.argv[3]
 
-    print('{}\t{}'.format(toy_run, data_dir))
+    print('{}\t{}'.format(toy_run, train_dir))
 
     #load in conll data here and convert to word vectors
+    X_train, y_train = embed(train_dir, 3)
+    X_test, y_test = embed(test_dir, 3)
 
+    # X_data = os.path.join(data_dir, 'treebank.word.index') #list of word vectors
+    # y_data = os.path.join(data_dir, 'treebank.tag.index') #list of tag vectors
+    #
+    # X_train, y_train, X_test, y_test = load_data(X_data, y_data)
 
-    X_data = os.path.join(data_dir, 'treebank.word.index') #list of word vectors
-    y_data = os.path.join(data_dir, 'treebank.tag.index') #list of tag vectors
-
-    X_train, y_train, X_test, y_test = load_data(X_data, y_data)
 
     predicted_sequences = bi_lstm(X_train, y_train, X_test, y_test)
 
     print('outputing prediction ...')
-    f = open(os.path.join(data_dir, 'treebank.test.auto'), 'w')
-    for seq in predicted_sequences:
-        f.write(' '.join([str(i) for i in seq]) + '\n')
-    f.close()
+    # f = open(os.path.join(data_dir, 'treebank.test.auto'), 'w')
+    # for seq in predicted_sequences:
+    #     f.write(' '.join([str(i) for i in seq]) + '\n')
+    # f.close()
