@@ -156,9 +156,8 @@ def get_word_clusters(conll_file):
 
 # Neural net for deciding if a span is a mention
 def ffnn_mention(X_train, y_train):
-    print(X_train.shape, y_train.shape)
     sm = Sequential()
-    sm.add(Dense(X_train.shape[1], input_dim=X_train.shape[1], activation='relu'))
+    sm.add(Dense(X_train.shape[1] // 2, input_dim=X_train.shape[1], activation='relu'))
     sm.add(Dense(2, activation='softmax'))
     sm.compile(loss='sparse_categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     sm.fit(X_train, y_train, batch_size=32)
@@ -167,12 +166,12 @@ def ffnn_mention(X_train, y_train):
 
 # Neural net for deciding if two spans corefer
 def ffnn_coreference(X_train, y_train):
-    print(X_train.shape, y_train.shape)
     sa = Sequential()
-    sa.add(Dense(X_train.shape[1], input_shape=(2, X_train.shape[1]), activation='relu'))
-    sa.add(Dense(X_train.shape[1], activation='softmax'))
+    sa.add(Dense(X_train.shape[1] // 2, input_shape=(X_train.shape[1:]), activation='relu'))
+    sa.add(Flatten(input_shape=X_train.shape[1:]))
+    sa.add(Dense(3, activation='softmax'))
     sa.compile(loss='sparse_categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
-    sa.fit(X_train, y_train, nb_epoch=350, verbose=0)
+    sa.fit(X_train, y_train, batch_size=32)
     return sa
 
 
@@ -274,7 +273,6 @@ def correspondances(training_data, L, pruning_model=None):
                     else:
                         labels.append(0)
 
-    print(pairs)
     return np.array(pairs), np.array(labels)
 
 
@@ -338,9 +336,9 @@ if __name__ == '__main__':
     print(X_train_coref.shape, y_train_coref.shape, X_test_coref.shape, y_test_coref.shape)
 
     # CREATING COREFERENCE NEURAL NET
-    # sa = ffnn_coreference(X_train_coref, y_train_coref)
-    # print(sm.evaluate(X_test_coref, y_test_coref))
-    # print(sm.predict(X_train_coref))
+    sa = ffnn_coreference(X_train_coref, y_train_coref)
+    print(sa.evaluate(X_test_coref, y_test_coref))
+    print(sa.predict(X_test_coref))
 
     # RESULTS
 
