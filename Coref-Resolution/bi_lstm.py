@@ -257,8 +257,8 @@ def correspondances(training_data, L, pruning_model=None):
                         continue
                     if pruning_model and pruning_model.predict(np.array([sum_val]))[0][1] < .5:
                         continue
-                    else:
-                        print(words)
+                    # else:
+                    #     print(words)
                     possible_mentions.append((words, sum_val))
 
             for span1, vec1 in possible_mentions:
@@ -271,7 +271,7 @@ def correspondances(training_data, L, pruning_model=None):
                         else:
                             labels.append(0)
 
-    print(pairs)
+    # print(pairs)
     return np.array(pairs), np.array(labels)
 
 
@@ -302,34 +302,34 @@ if __name__ == '__main__':
     #     np.save(name, items[index])
 
     # LOADING MENTION DATA
-    # X_train = np.array([np.array([float(num) for num in line.split()[1:]]) for line in open('X_train').read().split(']')])
     X_train_mention = np.vstack((np.load('X_train.npy')))
     X_test_mention = np.vstack((np.load('X_test.npy')))
 
     y_train_mention = np.vstack((np.load('y_train.npy')))
     y_test_mention = np.vstack((np.load('y_test.npy')))
 
-    # CREATING MENTION NEURAL NET
+    # # CREATING MENTION NEURAL NET
     sm = ffnn_mention(X_train_mention, y_train_mention)
-    print(sm.evaluate(X_test_mention, y_test_mention, verbose=0))
+    # print(sm.evaluate(X_test_mention, y_test_mention, verbose=0))
     # print(sm.predict(X_test_mention))
 
     # CREATING COREFERENCE DATA
-    # X_train_coref, y_train_coref = correspondances('conll-2012/train/', 10, pruning_model=sm)
-    # X_test_coref, y_test_coref = correspondances('conll-2012/test/', 10, pruning_model=sm)
-    #
-    # # SAVING COREFERENCE DATA
-    # print('saving npy files...')
-    # items = [X_train_coref, y_train_coref, X_test_coref, y_test_coref]
-    # names = ['X_train_coref.npy', 'y_train_coref.npy', 'X_test_coref.npy', 'y_test_coref.npy']
-    # for index, name in enumerate(names):
-    #     np.save(name, items[index])
+    X_train_coref, y_train_coref = correspondances('conll-2012/train/', 10, pruning_model=sm)
+    X_test_coref, y_test_coref = correspondances('conll-2012/test/', 10, pruning_model=sm)
+
+    # SAVING COREFERENCE DATA
+    print('saving npy files...')
+    items = [X_train_coref, y_train_coref, X_test_coref, y_test_coref]
+    names = ['X_train_coref.npy', 'y_train_coref.npy', 'X_test_coref.npy', 'y_test_coref.npy']
+    for index, name in enumerate(names):
+        np.save(name, items[index])
 
     # # LOADING COREFERENCE DATA
     X_train_coref = np.vstack((np.load('X_train_coref.npy')))
     X_test_coref = np.vstack((np.load('X_test_coref.npy')))
 
     y_train_coref = np.vstack((np.load('y_train_coref.npy')))
+    print(np.load('y_test_coref.npy'))
     y_test_coref = np.vstack((np.load('y_test_coref.npy')))
     print(X_train_coref.shape, y_train_coref.shape, X_test_coref.shape, y_train_coref.shape)
 

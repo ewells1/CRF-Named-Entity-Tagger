@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="601b4aac-4313-42a4-8f4e-6d0ece5d99c3" name="Default" comment="" />
+    <list default="true" id="601b4aac-4313-42a4-8f4e-6d0ece5d99c3" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Coref-Resolution/bi_lstm.py" afterPath="$PROJECT_DIR$/Coref-Resolution/bi_lstm.py" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -11,11 +15,21 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="bi_lstm_pos_tagger.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Coref-Resolution/bi_lstm_pos_tagger.py">
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="336">
-              <caret line="258" column="0" lean-forward="true" selection-start-line="258" selection-start-column="0" selection-end-line="258" selection-end-column="0" />
+            <state relative-caret-position="90">
+              <caret line="6" column="3" lean-forward="true" selection-start-line="6" selection-start-column="3" selection-end-line="6" selection-end-column="3" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="bi_lstm.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Coref-Resolution/bi_lstm.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-612">
+              <caret line="258" column="32" lean-forward="true" selection-start-line="258" selection-start-column="32" selection-end-line="258" selection-end-column="32" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -23,11 +37,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/.gitignore">
+      <file leaf-file-name="npyio.py" pinned="false" current-in-tab="false">
+        <entry file="file:///usr/local/lib/python3.6/site-packages/numpy/lib/npyio.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="6" column="0" lean-forward="false" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
+            <state relative-caret-position="211">
+              <caret line="369" column="0" lean-forward="false" selection-start-line="369" selection-start-column="0" selection-end-line="369" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -101,6 +115,7 @@
       <find>news</find>
       <find>news\t</find>
       <find>re</find>
+      <find>print</find>
     </findStrings>
     <replaceStrings>
       <replace>content</replace>
@@ -119,7 +134,6 @@
         <option value="$PROJECT_DIR$/brown_driver.py" />
         <option value="$PROJECT_DIR$/tan-clustering/json_from_wiki.py" />
         <option value="$PROJECT_DIR$/tagger.py" />
-        <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/AttentionWithContext.py" />
         <option value="$PROJECT_DIR$/bi_lstm_pos_tagger.py" />
         <option value="$PROJECT_DIR$/word2vec_training.py" />
@@ -130,6 +144,8 @@
         <option value="$PROJECT_DIR$/Coref-Resolution/X_train" />
         <option value="$PROJECT_DIR$/Coref-Resolution/X_train.npy" />
         <option value="$PROJECT_DIR$/Coref-Resolution/bi_lstm_pos_tagger.py" />
+        <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/Coref-Resolution/bi_lstm.py" />
       </list>
     </option>
   </component>
@@ -225,7 +241,24 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.bi_lstm_pos_tagger">
+  <component name="RunManager" selected="Python.bi_lstm">
+    <configuration name="bi_lstm" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Coref-Resolution" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="CRF-Named-Entity-Tagger" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Coref-Resolution/bi_lstm.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+    </configuration>
     <configuration name="bi_lstm_pos_tagger" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -256,23 +289,6 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="CRF-Named-Entity-Tagger" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Coref-Resolution/cnn.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-    </configuration>
-    <configuration name="json_from_wiki" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tan-clustering" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="CRF-Named-Entity-Tagger" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tan-clustering/json_from_wiki.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -332,17 +348,17 @@
       <item index="0" class="java.lang.String" itemvalue="Python.word2vec_training" />
       <item index="1" class="java.lang.String" itemvalue="Python.read_data" />
       <item index="2" class="java.lang.String" itemvalue="Python.tagger" />
-      <item index="3" class="java.lang.String" itemvalue="Python.json_from_wiki" />
-      <item index="4" class="java.lang.String" itemvalue="Python.bi_lstm_pos_tagger" />
-      <item index="5" class="java.lang.String" itemvalue="Python.cnn" />
+      <item index="3" class="java.lang.String" itemvalue="Python.bi_lstm_pos_tagger" />
+      <item index="4" class="java.lang.String" itemvalue="Python.cnn" />
+      <item index="5" class="java.lang.String" itemvalue="Python.bi_lstm" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.bi_lstm_pos_tagger" />
-        <item index="1" class="java.lang.String" itemvalue="Python.cnn" />
-        <item index="2" class="java.lang.String" itemvalue="Python.read_data" />
-        <item index="3" class="java.lang.String" itemvalue="Python.tagger" />
-        <item index="4" class="java.lang.String" itemvalue="Python.json_from_wiki" />
+        <item index="0" class="java.lang.String" itemvalue="Python.bi_lstm" />
+        <item index="1" class="java.lang.String" itemvalue="Python.bi_lstm_pos_tagger" />
+        <item index="2" class="java.lang.String" itemvalue="Python.cnn" />
+        <item index="3" class="java.lang.String" itemvalue="Python.read_data" />
+        <item index="4" class="java.lang.String" itemvalue="Python.tagger" />
       </list>
     </recent_temporary>
   </component>
@@ -373,8 +389,8 @@
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25885227" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.36949846" sideWeight="0.502442" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.46448705" sideWeight="0.497558" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.47914317" sideWeight="0.502442" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.36302143" sideWeight="0.497558" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32958034" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32958034" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -418,9 +434,9 @@
           <option name="timeStamp" value="35" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Coref-Resolution/bi_lstm_pos_tagger.py</url>
-          <line>89</line>
-          <option name="timeStamp" value="72" />
+          <url>file://$PROJECT_DIR$/Coref-Resolution/bi_lstm.py</url>
+          <line>332</line>
+          <option name="timeStamp" value="74" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
@@ -433,26 +449,11 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="74" />
+      <option name="time" value="75" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/Coref-Resolution/brown_corpus_training.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Coref-Resolution/conll-2012/train/a2e_0001.v4_auto_conll">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="3" column="81" lean-forward="false" selection-start-line="3" selection-start-column="81" selection-end-line="3" selection-end-column="81" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Coref-Resolution/reference-coreference-scorers-8.01/README.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -512,14 +513,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15">
           <caret line="1" column="22" lean-forward="true" selection-start-line="1" selection-start-column="22" selection-end-line="1" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="0" lean-forward="false" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -652,13 +645,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Coref-Resolution/X_train">
-      <provider selected="true" editor-type-id="LargeFileEditor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/Coref-Resolution/X_train" />
     <entry file="file://$PROJECT_DIR$/Coref-Resolution/y_train">
       <provider selected="true" editor-type-id="LargeFileEditor">
         <state relative-caret-position="0">
@@ -726,8 +713,32 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Coref-Resolution/bi_lstm_pos_tagger.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="336">
-          <caret line="258" column="0" lean-forward="true" selection-start-line="258" selection-start-column="0" selection-end-line="258" selection-end-column="0" />
+        <state relative-caret-position="300">
+          <caret line="20" column="26" lean-forward="true" selection-start-line="20" selection-start-column="26" selection-end-line="20" selection-end-column="26" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="6" column="3" lean-forward="true" selection-start-line="6" selection-start-column="3" selection-end-line="6" selection-end-column="3" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/lib/python3.6/site-packages/numpy/lib/npyio.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="211">
+          <caret line="369" column="0" lean-forward="false" selection-start-line="369" selection-start-column="0" selection-end-line="369" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Coref-Resolution/bi_lstm.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-612">
+          <caret line="258" column="32" lean-forward="true" selection-start-line="258" selection-start-column="32" selection-end-line="258" selection-end-column="32" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
