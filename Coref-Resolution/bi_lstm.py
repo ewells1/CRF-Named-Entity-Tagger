@@ -13,18 +13,10 @@ from keras.layers import Dense, Flatten, TimeDistributed
 from keras.preprocessing import sequence
 
 
-toy_run = True if sys.argv[1] == 'toy' else False
-save_dir = sys.argv[4]
-if toy_run:
-    # statistics from the gold data (both training and test data)
-    input_vocab_size = 12408 
-    output_vocab_size = 46
-    max_sent_len = 200
-else:
-    # statistics from the gold data (both training and test data)
-    input_vocab_size = 12408
-    output_vocab_size = 46 
-    max_sent_len = 20
+# statistics from the gold data (both training and test data)
+input_vocab_size = 12408
+output_vocab_size = 46
+max_sent_len = 20
 
 
 #load word2vec model
@@ -112,6 +104,7 @@ def bi_lstm(X_train, y_train, X_test, y_test):
     # model.add(Flatten())
     # model.add(TimeDistributed(Dense(1, activation='softmax')))
 
+
     #add in attention layer here from https://gist.github.com/cbaziotis/7ef97ccf71cbc14366835198c09809d2
 
     model.compile(
@@ -171,152 +164,201 @@ def get_word_clusters(conll_file):
 
     return actual_clusters
 
-def ffnn(X_train, y_train, X_test, y_test):
-    pass
+# Neural net for deciding if a span is a mention
+def ffnn_mention(X_train, y_train):
+    sm = Sequential()
+    sm.add(Dense(X_train.shape[1] // 2, input_dim=X_train.shape[1], activation='relu'))
+    sm.add(Dense(2, activation='softmax'))
+    sm.compile(loss='sparse_categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+    sm.fit(X_train, y_train, batch_size=32)
+    return sm
 
-def embed_mentions_by_word(training_data, L):
-    labels = []
-    word_spans = []
 
-    toy_data = 100
-    counter = 0
-    with open('word_vectors', 'w') as wv_file:
-        with open('tag_vectors', 'w') as span_file:
-            for file in os.listdir(training_data):
-                if counter == toy_data:
-                    break
-                counter += 1
-                print(file)
-                conll_file = read_data.ConllFile(os.path.join(training_data, file))
-                # find all word clusters
+# Neural net for deciding if two spans corefer
+def ffnn_coreference(X_train, y_train):
+    sa = Sequential()
+    sa.add(Dense(X_train.shape[1] // 2, input_shape=(X_train.shape[1:]), activation='relu'))
+    sa.add(Flatten(input_shape=X_train.shape[1:]))
+    sa.add(Dense(3, activation='softmax'))
+    sa.compile(loss='sparse_categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+    sa.fit(X_train, y_train, batch_size=32)
+    return sa
 
-                all_clusters = get_word_clusters(conll_file)
-                # instead of just giving the word, give an arbitrary sized span, with label 1 or 0
-                max = len(conll_file.words)
 
-                all_words = conll_file.words
-                all_clusters = list(all_clusters.values())
-                all_clusters = [[' '.join(span) for span in words] for words in all_clusters]
-
-                for index, item in enumerate(all_words):
-                    # just using a summed sentence embedding here
-                    for size in range(2, L):
-                        if size + index <= max:
-                            words = ' '.join([item.word for item in all_words[index:size]])
-                            found_in_cluster = False
-                            for span in all_clusters:
-                                if words in span:
-                                    found_in_cluster = True
-                                    break
-                            if found_in_cluster:
-                                labels.append(1)
-                            else:
-                                labels.append(0)
-
-                            word_spans.append(words)
-
-    return (word_spans, labels)
-
+# Finds all possible mentions and turns them into embedding vectors
+# Returns embedding vector for each span and whether or not each is a mention
 def embed_mentions(training_data, L):
     labels = []
     spans = []
-    word_spans = []
 
     toy_data = 100
     counter = 0
-    with open('word_vectors', 'w') as wv_file:
-        with open('tag_vectors', 'w') as span_file:
-            for file in os.listdir(training_data):
-                print(file)
-                conll_file = read_data.ConllFile(os.path.join(training_data, file))
-                # find all word clusters
+    for file in os.listdir(training_data):
+        if counter == toy_data:
+            break
+        counter += 1
+        conll_file = read_data.ConllFile(os.path.join(training_data, file))
+        # find all word clusters
 
-                all_clusters = get_word_clusters(conll_file)
-                # instead of just giving the word, give an arbitrary sized span, with label 1 or 0
-                max = len(conll_file.words)
+        all_clusters = get_word_clusters(conll_file)
+        # instead of just giving the word, give an arbitrary sized span, with label 1 or 0
+        max = len(conll_file.words)
 
-                all_words = conll_file.words
-                all_clusters = list(all_clusters.values())
-                all_clusters = [[' '.join(span) for span in words] for words in all_clusters]
+        all_words = conll_file.words
+        all_clusters = list(all_clusters.values())
+        all_clusters = [[' '.join(span) for span in words] for words in all_clusters]
 
-                words = np.array(L)
-                for index,item in enumerate(all_words):
-                    #just using a summed sentence embedding here
-                    for size in range(2, L):
-                        if size + index <= max:
-                            words = ' '.join([item.word for item in all_words[index:size]])
-                            # intermediate_val = [embed_model.wv[item.word.lower()] if item.word.lower() in embed_model.wv else [0 for index in range(20)] for item in all_words[index:size]]
+        for index,item in enumerate(all_words):
+            #just using a summed sentence embedding here
+            for size in range(2, L):
+                if size + index <= max:
+                    words = ' '.join([item.word for item in all_words[index:size]])
+                    intermediate_val = [embed_model.wv[item.word.lower()] if item.word.lower() in embed_model.wv else [0 for index in range(20)] for item in all_words[index:size]]
+                    sum_val = np.sum(intermediate_val, 0)
+                    if np.size(sum_val) != 20:
+                        continue
+                    spans.append(sum_val)
 
-                            #sum_val = np.sum(intermediate_val, 0)
+                    found_in_cluster = False
+                    for span in all_clusters:
+                        if words in span:
+                            found_in_cluster = True
+                            break
+                    if found_in_cluster:
+                        labels.append(1)
+                    else:
+                        labels.append(0)
 
-                            start_span = all_words[index]
-                            end_span = all_words[size]
+    return np.array(spans), np.array(labels)
 
 
-                            sum_val = np.sum([embed_model.wv[item.word.lower()] if item.word.lower() in embed_model.wv else [0 for index in range(20)] for item in [start_span, end_span]], 0)
-                            if np.size(sum_val) != 20:
-                                continue
+# Finds all possible pairs of mentions and turns them into embedding vectors
+# Returns all pairs and whether each corefers or not
+def correspondances(training_data, L, pruning_model=None):
+    labels = []
+    pairs = []
 
-                            sum_val = np.append(sum_val, size-index)
-                            spans.append(sum_val)
+    toy_data = 100
+    counter = 0
+    for file in os.listdir(training_data):
+        if counter == toy_data:
+            break
+        counter += 1
+        # print(file)
+        conll_file = read_data.ConllFile(os.path.join(training_data, file))
+        # find all word clusters
 
-                            found_in_cluster = False
-                            for span in all_clusters:
-                                if words in span:
-                                    found_in_cluster = True
-                                    break
-                            if found_in_cluster:
-                                labels.append(1)
-                            else:
-                                labels.append(0)
+        all_clusters = get_word_clusters(conll_file)
+        # instead of just giving the word, give an arbitrary sized span, with label 1 or 0
+        max = len(conll_file.words)
 
-                            word_spans.append(words)
+        all_words = conll_file.words
+        possible_mentions = []
 
-    return (spans, labels, word_spans)
+        for index, item in enumerate(all_words):
+            #just using a summed sentence embedding here
+            for size in range(2, L):
+                if size + index <= max:
+                    words = ' '.join([item.word for item in all_words[index:size]])
+                    intermediate_val = [embed_model.wv[item.word.lower()] if item.word.lower() in embed_model.wv else [0 for index in range(20)] for item in all_words[index:size]]
+                    sum_val = np.sum(intermediate_val, 0)
+                    if np.size(sum_val) != 20:
+                        continue
+                    if pruning_model and pruning_model.predict(np.array([sum_val]))[0][1] < .5:
+                        continue
+                    else:
+                        print(words)
+                    possible_mentions.append((words, sum_val))
+
+            for span1, vec1 in possible_mentions:
+                for span2, vec2 in possible_mentions:
+                    pairs.append([vec1, vec2])
+                    same_cluster = False
+                    for cluster in all_clusters:
+                        if span1 in all_clusters[cluster] and span2 in all_clusters[cluster] and span1 != span2:
+                            same_cluster = True
+                            break
+                    if same_cluster:
+                        labels.append(1)
+                    else:
+                        labels.append(0)
+
+    return np.array(pairs), np.array(labels)
+
+
+def pairwise(i, j, sm, sa):
+    # possible_antecedents = []  # TODO: Figure out what this should be
+    # if len(possible_antecedents) < 1:  # j = epsilon
+    #     return 0
+    sm_i = np.argmax(np.array([sm.predict(i)]))
+    sm_j = np.argmax(np.array([sm.predict(j)]))
+    sa_i_j = np.argmax(sa.predict(np.array([np.concatenate(i, j)])))
+    return sm_i + sm_j + sa_i_j
+
 
 if __name__ == '__main__':
-    train_dir = sys.argv[2]
-    test_dir = sys.argv[3]
+    # CREATING MENTION DATA
+    X_train_mention, y_train_mention = embed_mentions('conll-2012/train/', 10)
+    X_test_mention, y_test_mention = embed_mentions('conll-2012/test/', 10)
+    print(X_train_mention.shape, y_train_mention.shape, X_test_mention.shape, y_test_mention.shape)
 
-    print('{}\t{}'.format(toy_run, train_dir))
+    # SAVING MENTION DATA
+    print('saving npy files...')
+    items = [X_train_mention, y_train_mention, X_test_mention, y_test_mention]
+    names = ['X_train.npy', 'y_train.npy', 'X_test.npy', 'y_test.npy']
 
-    #load in conll data here and convert to word vectors
-    # X_train, y_train, X_train_words = embed_mentions(train_dir, 5)
-    # X_test, y_test, X_test_words = embed_mentions(test_dir, 5)
+    for index, name in enumerate(names):
+        # with open(name, 'w') as file:
+        #     for entry in items[index]:
+        #         file.write(str(entry))
+        np.save(name, items[index])
+
+    # LOADING MENTION DATA
+    # X_train = np.array([np.array([float(num) for num in line.split()[1:]]) for line in open('X_train').read().split(']')])
+    # X_train_mention = np.vstack((np.load('X_train.npy')))
+    # X_test_mention = np.vstack((np.load('X_test.npy')))
     #
-    # # X_train, y_train = embed_mentions_by_word(train_dir, 20)
+    # y_train_mention = np.vstack((np.load('y_train.npy')))
+    # y_test_mention = np.vstack((np.load('y_test.npy')))
+
+    # CREATING MENTION NEURAL NET
+    sm = ffnn_mention(np.array(X_train_mention), np.array(y_train_mention))
+    print(sm.evaluate(np.array(X_test_mention), np.array(y_test_mention)))
+    # print(sm.predict(X_test_mention))
+
+    # CREATING COREFERENCE DATA
+    X_train_coref, y_train_coref = correspondances('conll-2012/train/', 10, pruning_model=sm)
+    X_test_coref, y_test_coref = correspondances('conll-2012/test/', 10, pruning_model=sm)
+
+    # SAVING COREFERENCE DATA
+    print('saving npy files...')
+    items = [X_train_coref, y_train_coref, X_test_coref, y_test_coref]
+    names = ['X_train_coref.npy', 'y_train_coref.npy', 'X_test_coref.npy', 'y_test_coref.npy']
+    for index, name in enumerate(names):
+        np.save(name, items[index])
+
+    # LOADING COREFERENCE DATA
+    # X_train_coref = np.vstack((np.load('X_train_coref.npy')))
+    # X_test_coref = np.vstack((np.load('X_test_coref.npy')))
+    #
+    # y_train_coref = np.vstack((np.load('y_train_coref.npy')))
+    # y_test_coref = np.vstack((np.load('y_test_coref.npy')))
+    print(X_train_coref.shape, y_train_coref.shape, X_test_coref.shape, y_test_coref.shape)
+
+    # CREATING COREFERENCE NEURAL NET
+    sa = ffnn_coreference(X_train_coref, y_train_coref)
+    print(sa.evaluate(X_test_coref, y_test_coref))
+    print(sa.predict(X_test_coref))
+
+    # RESULTS
+
+
+    # LEFTOVER BI-LSTM STUFF
+    # predicted_sequences = bi_lstm(X_train, y_train, X_test, y_test)
     #
     #
-    # print('saving npy files...')
-    # items = [X_train, y_train, X_test, y_test]
-    # names = ['X_train_alt_5.npy', 'y_train_alt_5.npy', 'X_test_alt_5.npy', 'y_test_alt_5.npy']
-    #
-    # for index, name in enumerate(names):
-    #     # with open(name, 'w') as file:
-    #     #     for entry in items[index]:
-    #     #         file.write(str(entry))
-    #     np.save(name, items[index])
-
-
-    #X_train = np.array([np.array([float(num) for num in line.split()[1:]]) for line in open('X_train').read().split(']')])
-    print('loading X...')
-    X_train = np.vstack((np.load('X_train_alt_5.npy')))
-    X_test = np.vstack((np.load('X_test_alt_5.npy')))
-
-    print('loading y...')
-    y_train = np.vstack((np.load('y_train_alt_5.npy')))
-    y_test = np.vstack((np.load('y_test_alt_5.npy')))
-
-    print(sum(y_train))
-    print(sum(y_test))
-
-    predicted_sequences = bi_lstm(X_train, y_train, X_test, y_test)
-
-    # predicted_sequences = bi_lstm(X_train[:100], y_train[:100], X_test[:100], y_test[:100])
-
-
-    print('outputing prediction ...')
-    f = open(os.path.join(save_dir, 'mention.test.auto'), 'w')
-    for seq in predicted_sequences:
-        f.write(' '.join([str(i) for i in seq]) + '\n')
-    f.close()
+    # print('outputing prediction ...')
+    # f = open(os.path.join(save_dir, 'mention.test.auto'), 'w')
+    # for seq in predicted_sequences:
+    #     f.write(' '.join([str(i) for i in seq]) + '\n')
+    # f.close()
