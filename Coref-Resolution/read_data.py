@@ -112,7 +112,8 @@ class ConllFile:
                     word_clusters.append(int(b_cl.group(1)))
                 elif l_cl:
                     finished = temp_clusters.pop()
-                    self.clusters[finished[0]].append(((finished[1], i+1), ' '.join(finished[2:])))
+                    # self.clusters[finished[0]].append(((finished[1], i+1), ' '.join(finished[2:])))
+                    self.clusters[finished[0]].append(' '.join(finished[2:]))
 
             self.words.append(Word(word, lemma, pos, word_clusters))
             i += 1

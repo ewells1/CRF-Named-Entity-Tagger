@@ -2,7 +2,7 @@ import pdb
 import sys
 import os
 import gensim
-import read_data
+from Project2.read_data import ConllCorpus
 import numpy as np
 # import theano
 
@@ -74,24 +74,28 @@ def bi_lstm(X_train, y_train, X_test, y_test):
     print('building model ...')
     model = Sequential()
 
-    # X_train = np.reshape(X_train, (X_train.shape[0], 1, X_train.shape[1]))
-    # X_test = np.reshape(X_test, (X_test.shape[0], 1, X_test.shape[1]))
+    X_train = np.reshape(X_train, (X_train.shape[0], 1, X_train.shape[1]))
+    X_test = np.reshape(X_test, (X_test.shape[0], 1, X_test.shape[1]))
 
     print(y_train.shape)
     print(X_train.shape)
     # setup for the network
-    embedding_size = 20 #size of the word embeddings
+    embedding_size = 20  # size of the word embeddings
     lstm_size = 300
     batch_size = 100
-    nb_epoch = 5
 
-    model.add(Dense(20, activation='relu', input_dim=20))
-    model.add(Dense(1, activation='softmax'))
+    # model.add(Dense(20, activation='relu', input_dim=21))
+    # model.add(Dense(1, activation='softmax'))
+
     # model.add(Embedding(input_vocab_size + 1, embedding_size, input_length=max_sent_len))
-    # model.add(Bidirectional(LSTM(lstm_size, return_sequences=True), input_shape=(1, embedding_size)))
-    # # model.add(LSTM(lstm_size, input_shape=(1, 20), return_sequences=True))
+    model.add(Bidirectional(LSTM(lstm_size, return_sequences=True), input_shape=(1, embedding_size)))
+    model.add(LSTM(2, return_sequences=False))
+    # model.add(LSTM(lstm_size, input_shape=(1, 20), return_sequences=True))
+
+    # model.add(Dense(20, activation='relu'))
     # model.add(Flatten())
-    # model.add(TimeDistributed(Dense(100, activation='softmax')))
+    # model.add(TimeDistributed(Dense(1, activation='softmax')))
+
 
     #add in attention layer here from https://gist.github.com/cbaziotis/7ef97ccf71cbc14366835198c09809d2
 
@@ -102,56 +106,48 @@ def bi_lstm(X_train, y_train, X_test, y_test):
         metrics=['accuracy'],
     )
 
-    for layer in model.layers:
-        print("input")
-        print(layer.input_shape)
-
-        print("output")
-        print(layer.output_shape)
-        print('\n\n')
-
     print('fitting model ...')
-    model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=nb_epoch, validation_data=[X_test, y_test])
+    model.fit(X_train, y_train, batch_size=batch_size)
 
     print('saving model ...')
     # model.save_weights(os.path.join(save_dir, 'mention.model.weights'))
-    open('mention.model.architecture', 'w').write(
-        model.to_yaml())
+    open('mention.model.architecture', 'w').write(model.to_yaml())
 
     score = model.evaluate(X_test, y_test, batch_size=100)
     print(score) #looooooooool
     return model.predict_classes(X_test, batch_size=batch_size, verbose=1)
 
 
-def get_word_clusters(conll_file):
-    current_clusters = []
-    possible_spans = {}
-    actual_clusters = {}
-
-    #this needs to be a tree traversal instead
-
-    for word_obj in conll_file.words:
-        word = word_obj.word
-        clusters = word_obj.clusters
-
-        for possible_cluster in current_clusters:
-            if possible_cluster not in clusters:
-
-                if possible_cluster in actual_clusters:
-                    actual_clusters[possible_cluster].append(possible_spans[possible_cluster])
-                else:
-                    actual_clusters[possible_cluster] = [possible_spans[possible_cluster]]
-                current_clusters.remove(possible_cluster)
-
-        for index,cluster_num in enumerate(clusters):
-            if cluster_num not in current_clusters:
-                current_clusters.append(cluster_num) #if its not already being watched, then add it to the cluster
-                possible_spans[cluster_num] = ([word])
-            else:
-                possible_spans[cluster_num].append(word)
-
-
-    return actual_clusters
+# I already had this implemented in the ConllCorpus class
+# def get_word_clusters(conll_file):
+#     current_clusters = []
+#     possible_spans = {}
+#     actual_clusters = {}
+#
+#     #this needs to be a tree traversal instead
+#
+#     for word_obj in conll_file.words:
+#         word = word_obj.word
+#         clusters = word_obj.clusters
+#
+#         for possible_cluster in current_clusters:
+#             if possible_cluster not in clusters:
+#
+#                 if possible_cluster in actual_clusters:
+#                     actual_clusters[possible_cluster].append(possible_spans[possible_cluster])
+#                 else:
+#                     actual_clusters[possible_cluster] = [possible_spans[possible_cluster]]
+#                 current_clusters.remove(possible_cluster)
+#
+#         for index,cluster_num in enumerate(clusters):
+#             if cluster_num not in current_clusters:
+#                 current_clusters.append(cluster_num) #if its not already being watched, then add it to the cluster
+#                 possible_spans[cluster_num] = ([word])
+#             else:
+#                 possible_spans[cluster_num].append(word)
+#
+#
+#     return actual_clusters
 
 
 # Neural net for deciding if a span is a mention
@@ -159,7 +155,7 @@ def ffnn_mention(X_train, y_train):
     sm = Sequential()
     sm.add(Dense(X_train.shape[1] // 2, input_dim=X_train.shape[1], activation='relu'))
     sm.add(Dense(2, activation='softmax'))
-    sm.compile(loss='sparse_categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+    sm.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     sm.fit(X_train, y_train, batch_size=32)
     return sm
 
@@ -169,8 +165,8 @@ def ffnn_coreference(X_train, y_train):
     sa = Sequential()
     sa.add(Dense(X_train.shape[1] // 2, input_shape=(X_train.shape[1:]), activation='relu'))
     sa.add(Flatten(input_shape=X_train.shape[1:]))
-    sa.add(Dense(3, activation='softmax'))
-    sa.compile(loss='sparse_categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+    sa.add(Dense(2, activation='softmax'))
+    sa.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     sa.fit(X_train, y_train, batch_size=32)
     return sa
 
@@ -181,16 +177,11 @@ def embed_mentions(training_data, L):
     labels = []
     spans = []
 
-    toy_data = 100
-    counter = 0
-    for file in os.listdir(training_data):
-        if counter == toy_data:
-            break
-        counter += 1
-        conll_file = read_data.ConllFile(os.path.join(training_data, file))
+    toy_data = 1000
+    corpus = ConllCorpus(training_data)
+    for conll_file in corpus.docs[:toy_data]:
         # find all word clusters
-
-        all_clusters = get_word_clusters(conll_file)
+        all_clusters = conll_file.clusters
         # instead of just giving the word, give an arbitrary sized span, with label 1 or 0
         max = len(conll_file.words)
 
@@ -215,9 +206,9 @@ def embed_mentions(training_data, L):
                             found_in_cluster = True
                             break
                     if found_in_cluster:
-                        labels.append(1)
+                        labels.append(np.array([0, 1]))
                     else:
-                        labels.append(0)
+                        labels.append(np.array([1, 0]))
 
     return np.array(spans), np.array(labels)
 
@@ -228,17 +219,11 @@ def correspondances(training_data, L, pruning_model=None):
     labels = []
     pairs = []
 
-    toy_data = 100
-    counter = 0
-    for file in os.listdir(training_data):
-        if counter == toy_data:
-            break
-        counter += 1
-        # print(file)
-        conll_file = read_data.ConllFile(os.path.join(training_data, file))
+    toy_data = 1000
+    corpus = ConllCorpus(training_data)
+    for conll_file in corpus.docs[:toy_data]:
         # find all word clusters
-
-        all_clusters = get_word_clusters(conll_file)
+        all_clusters = conll_file.clusters
         # instead of just giving the word, give an arbitrary sized span, with label 1 or 0
         max = len(conll_file.words)
 
@@ -254,7 +239,7 @@ def correspondances(training_data, L, pruning_model=None):
                     sum_val = np.sum(intermediate_val, 0)
                     if np.size(sum_val) != 20:
                         continue
-                    if pruning_model and pruning_model.predict(np.array([sum_val]))[0][1] < .5:
+                    if pruning_model and pruning_model.predict(np.array([sum_val]))[0][1] < .25:
                         continue
                     else:
                         print(words)
@@ -269,9 +254,9 @@ def correspondances(training_data, L, pruning_model=None):
                             same_cluster = True
                             break
                     if same_cluster:
-                        labels.append(1)
+                        labels.append(np.array([0, 1]))
                     else:
-                        labels.append(0)
+                        labels.append(np.array([1, 0]))
 
     return np.array(pairs), np.array(labels)
 
@@ -311,6 +296,16 @@ if __name__ == '__main__':
     # y_train_mention = np.vstack((np.load('y_train.npy')))
     # y_test_mention = np.vstack((np.load('y_test.npy')))
 
+    # BI-LSTM
+    predicted_sequences = bi_lstm(X_train_mention, y_train_mention, X_test_mention, y_test_mention)
+    print(predicted_sequences)
+
+    # print('outputing prediction ...')
+    # f = open('mention.test.auto', 'w')
+    # for seq in predicted_sequences:
+    #     f.write(' '.join([str(i) for i in seq]) + '\n')
+    # f.close()
+
     # CREATING MENTION NEURAL NET
     sm = ffnn_mention(np.array(X_train_mention), np.array(y_train_mention))
     print(sm.evaluate(np.array(X_test_mention), np.array(y_test_mention)))
@@ -338,17 +333,11 @@ if __name__ == '__main__':
     # CREATING COREFERENCE NEURAL NET
     sa = ffnn_coreference(X_train_coref, y_train_coref)
     print(sa.evaluate(X_test_coref, y_test_coref))
-    print(sa.predict(X_test_coref))
 
     # RESULTS
+    results = sa.predict(X_test_coref)
+    bin_results = [0 if results[i][0] < .5 else 1 for i in range(len(results))]
+    print(sum(bin_results))  # If 0, we have a problem
+    print(sum([np.argmax(arr) for arr in y_test_coref]))
 
 
-    # LEFTOVER BI-LSTM STUFF
-    # predicted_sequences = bi_lstm(X_train, y_train, X_test, y_test)
-    #
-    #
-    # print('outputing prediction ...')
-    # f = open(os.path.join(save_dir, 'mention.test.auto'), 'w')
-    # for seq in predicted_sequences:
-    #     f.write(' '.join([str(i) for i in seq]) + '\n')
-    # f.close()
