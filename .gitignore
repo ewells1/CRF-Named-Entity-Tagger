@@ -4,3 +4,6 @@ CRF-Named-Entity-Tagger/dev*
 CRF-Named-Entity-Tagger/train*
 
 AttentionWithContext.py
+X_*
+y_*
+*.npy

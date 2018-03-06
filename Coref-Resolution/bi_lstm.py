@@ -79,6 +79,7 @@ def bi_lstm(X_train, y_train, X_test, y_test):
 
     print(y_train.shape)
     print(X_train.shape)
+
     # setup for the network
     embedding_size = 20  # size of the word embeddings
     lstm_size = 300
@@ -86,7 +87,6 @@ def bi_lstm(X_train, y_train, X_test, y_test):
 
     # model.add(Dense(20, activation='relu', input_dim=21))
     # model.add(Dense(1, activation='softmax'))
-
     # model.add(Embedding(input_vocab_size + 1, embedding_size, input_length=max_sent_len))
     model.add(Bidirectional(LSTM(lstm_size, return_sequences=True), input_shape=(1, embedding_size)))
     model.add(LSTM(2, return_sequences=False))
@@ -110,13 +110,11 @@ def bi_lstm(X_train, y_train, X_test, y_test):
     model.fit(X_train, y_train, batch_size=batch_size)
 
     print('saving model ...')
-    # model.save_weights(os.path.join(save_dir, 'mention.model.weights'))
-    open('mention.model.architecture', 'w').write(model.to_yaml())
+    # model.save_weights(os.path.join(save_dir, 'mention.model.weights'))    open('mention.model.architecture', 'w').write(model.to_yaml())
 
     score = model.evaluate(X_test, y_test, batch_size=100)
     print(score) #looooooooool
     return model.predict_classes(X_test, batch_size=batch_size, verbose=1)
-
 
 # I already had this implemented in the ConllCorpus class
 # def get_word_clusters(conll_file):
