@@ -122,6 +122,7 @@ def bi_lstm(X_train, y_train, X_test, y_test):
     print(score) #looooooooool
     return model.predict_classes(X_test, batch_size=batch_size, verbose=1)
 
+
 def get_word_clusters(conll_file):
     current_clusters = []
     possible_spans = {}
@@ -186,8 +187,7 @@ def embed_mentions(training_data, L):
     for file in os.listdir(training_data):
         if counter == toy_data:
             break
-        counter +=1
-        print(file)
+        counter += 1
         conll_file = read_data.ConllFile(os.path.join(training_data, file))
         # find all word clusters
 
@@ -220,7 +220,7 @@ def embed_mentions(training_data, L):
                     else:
                         labels.append(0)
 
-    return (spans, labels)
+    return np.array(spans), np.array(labels)
 
 
 # Finds all possible pairs of mentions and turns them into embedding vectors
@@ -264,12 +264,15 @@ def correspondances(training_data, L, pruning_model=None):
             for span1, vec1 in possible_mentions:
                 for span2, vec2 in possible_mentions:
                     pairs.append([vec1, vec2])
+                    same_cluster = False
                     for cluster in all_clusters:
                         if span1 in all_clusters[cluster] and span2 in all_clusters[cluster] and span1 != span2:
-                            labels.append(1)
+                            same_cluster = True
                             break
-                        else:
-                            labels.append(0)
+                    if same_cluster:
+                        labels.append(1)
+                    else:
+                        labels.append(0)
 
     # print(pairs)
     return np.array(pairs), np.array(labels)
@@ -286,22 +289,24 @@ def pairwise(i, j, sm, sa):
 
 
 if __name__ == '__main__':
-    # # CREATING MENTION DATA
-    # X_train, y_train = embed_mentions(train_dir, 10)
-    # X_test, y_test = embed_mentions(test_dir, 10)
-    #
-    # # SAVING MENTION DATA
-    # print('saving npy files...')
-    # items = [X_train, y_train, X_test, y_test]
-    # names = ['X_train.npy', 'y_train.npy', 'X_test.npy', 'y_test.npy']
-    #
-    # for index, name in enumerate(names):
-    #     # with open(name, 'w') as file:
-    #     #     for entry in items[index]:
-    #     #         file.write(str(entry))
-    #     np.save(name, items[index])
+    # CREATING MENTION DATA
+    X_train_mention, y_train_mention = embed_mentions('conll-2012/train/', 10)
+    X_test_mention, y_test_mention = embed_mentions('conll-2012/test/', 10)
+    print(X_train_mention.shape, y_train_mention.shape, X_test_mention.shape, y_test_mention.shape)
+
+    # SAVING MENTION DATA
+    print('saving npy files...')
+    items = [X_train_mention, y_train_mention, X_test_mention, y_test_mention]
+    names = ['X_train.npy', 'y_train.npy', 'X_test.npy', 'y_test.npy']
+
+    for index, name in enumerate(names):
+        # with open(name, 'w') as file:
+        #     for entry in items[index]:
+        #         file.write(str(entry))
+        np.save(name, items[index])
 
     # LOADING MENTION DATA
+
     X_train_mention = np.vstack((np.load('X_train.npy')))
     X_test_mention = np.vstack((np.load('X_test.npy')))
 
@@ -311,6 +316,18 @@ if __name__ == '__main__':
     # # CREATING MENTION NEURAL NET
     sm = ffnn_mention(X_train_mention, y_train_mention)
     # print(sm.evaluate(X_test_mention, y_test_mention, verbose=0))
+
+    # X_train = np.array([np.array([float(num) for num in line.split()[1:]]) for line in open('X_train').read().split(']')])
+    # X_train_mention = np.vstack((np.load('X_train.npy')))
+    # X_test_mention = np.vstack((np.load('X_test.npy')))
+    #
+    # y_train_mention = np.vstack((np.load('y_train.npy')))
+    # y_test_mention = np.vstack((np.load('y_test.npy')))
+
+    # CREATING MENTION NEURAL NET
+    sm = ffnn_mention(np.array(X_train_mention), np.array(y_train_mention))
+    print(sm.evaluate(np.array(X_test_mention), np.array(y_test_mention)))
+
     # print(sm.predict(X_test_mention))
 
     # CREATING COREFERENCE DATA
@@ -324,6 +341,7 @@ if __name__ == '__main__':
     for index, name in enumerate(names):
         np.save(name, items[index])
 
+
     # # LOADING COREFERENCE DATA
     X_train_coref = np.vstack((np.load('X_train_coref.npy')))
     X_test_coref = np.vstack((np.load('X_test_coref.npy')))
@@ -331,11 +349,18 @@ if __name__ == '__main__':
     y_train_coref = np.vstack((np.load('y_train_coref.npy')))
     print(np.load('y_test_coref.npy'))
     y_test_coref = np.vstack((np.load('y_test_coref.npy')))
-    print(X_train_coref.shape, y_train_coref.shape, X_test_coref.shape, y_train_coref.shape)
+    print(X_train_coref.shape, y_train_coref.shape, X_test_coref.shape, y_test_coref.shape)
+    # LOADING COREFERENCE DATA
+    # X_train_coref = np.vstack((np.load('X_train_coref.npy')))
+    # X_test_coref = np.vstack((np.load('X_test_coref.npy')))
+    #
+    # y_train_coref = np.vstack((np.load('y_train_coref.npy')))
+    # y_test_coref = np.vstack((np.load('y_test_coref.npy')))
+
 
     # CREATING COREFERENCE NEURAL NET
     # sa = ffnn_coreference(X_train_coref, y_train_coref)
-    # print(sm.evaluate(X_test_coref, y_test_coref, verbose=0))
+    # print(sm.evaluate(X_test_coref, y_test_coref))
     # print(sm.predict(X_train_coref))
 
     # RESULTS
