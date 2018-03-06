@@ -10,17 +10,26 @@ def load_json(path_to_json):
     with codecs.open(path_to_json, encoding='utf8') as json_file:
         return [json.loads(x) for x in json_file]
 
-def load_sentences(training_data):
+def load_sentences(conll_training, brown_training):
     print("loading sentences...")
 
     sentences = []
 
-    for file in os.listdir(training_data):
+    print('loading brown')
+    with open(brown_training, 'r') as brown_file:
+        for line in brown_file:
+            sentences.append(nltk.tokenize.word_tokenize(line.lower()))
+
+    print('loading conll')
+    for file in os.listdir(conll_training):
         #create conll file object
-        conll_file = read_data.ConllFile(os.path.join(training_data, file))
+        conll_file = read_data.ConllFile(os.path.join(conll_training, file))
         sentences.append(' '.join([item.word.lower() for item in conll_file.words]))
-        # sentences.append(nltk.tokenize.word_tokenize(entry['Arg1']['RawText'].lower()))
-        # sentences.append(nltk.tokenize.word_tokenize(entry['Arg2']['RawText'].lower()))
+
+
+
+            # sentences.append(nltk.tokenize.word_tokenize(entry['Arg1']['RawText'].lower()))
+            # sentences.append(nltk.tokenize.word_tokenize(entry['Arg2']['RawText'].lower()))
     return sentences
 
 def train_word2vec(sentences):
@@ -30,7 +39,7 @@ def train_word2vec(sentences):
     return model
 
 # data = load_json('/Users/sspala/dev/Information-Extraction/Coref-Resolution/conll-2012/train')
-sentences = load_sentences('/Users/sspala/dev/Information-Extraction/Coref-Resolution/conll-2012/train')
+sentences = load_sentences('/Users/sspala/dev/Information-Extraction/Coref-Resolution/conll-2012/train', '/Users/sspala/dev/Information-Extraction/Coref-Resolution/brown_corpus_training.txt')
 model = train_word2vec(sentences)
 
 print("saving model...")
