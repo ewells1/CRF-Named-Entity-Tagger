@@ -129,10 +129,12 @@ def bi_lstm(X_train, y_train, X_test, y_test):
     model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=nb_epoch, validation_data=[X_test, y_test])
 
     print('saving model ...')
-    model.save_weights(os.path.join(save_dir, 'mention.model.weights'))
+    # model.save_weights(os.path.join(save_dir, 'mention.model.weights'))
     open(os.path.join(save_dir, 'mention.model.architecture'), 'w').write(
         model.to_yaml())
 
+    score = model.evaluate(X_test, y_test, batch_size=100)
+    print(score) #looooooooool
     return model.predict_classes(X_test, batch_size=batch_size, verbose=1)
 
 def get_word_clusters(conll_file):
@@ -246,10 +248,11 @@ if __name__ == '__main__':
 
 
 
-    predicted_sequences = bi_lstm(X_train[:100], y_train[:100], X_test[:100], y_test[:100])
+    predicted_sequences = bi_lstm(X_train, y_train, X_test, y_test)
+
 
     print('outputing prediction ...')
-    # f = open(os.path.join(data_dir, 'treebank.test.auto'), 'w')
-    # for seq in predicted_sequences:
-    #     f.write(' '.join([str(i) for i in seq]) + '\n')
-    # f.close()
+    f = open(os.path.join(save_dir, 'mention.test.auto'), 'w')
+    for seq in predicted_sequences:
+        f.write(' '.join([str(i) for i in seq]) + '\n')
+    f.close()
