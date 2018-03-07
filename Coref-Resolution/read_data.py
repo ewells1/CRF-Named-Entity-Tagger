@@ -105,7 +105,8 @@ class ConllFile:
                 l_cl = l.search(part)
 
                 if u_cl:
-                    self.clusters[u_cl.group(1)].append(((i, i+1), word))
+                    # self.clusters[u_cl.group(1)].append(((i, i+1), word))
+                    self.clusters[u_cl.group(1)].append(word)
                     word_clusters.append(int(u_cl.group(1)))
                 elif b_cl:
                     temp_clusters.append([b_cl.group(1), i, word])
