@@ -1,10 +1,10 @@
-import pdb
-import sys
-import os
+# import pdb
+# import sys
+# import os
 import gensim
 from Project2.read_data import ConllCorpus
 import numpy as np
-# import theano
+from sklearn.linear_model import LogisticRegression
 
 from keras.models import Sequential
 from keras.layers import Embedding, LSTM
@@ -171,15 +171,26 @@ def ffnn_coreference(X_train, y_train):
     return sa
 
 
+def lr_mention(X_train, y_train):
+    lr = LogisticRegression()
+    lr.fit(X_train, y_train)
+    return lr
+
+
+def lr_coreference(X_train, y_train):
+    lr = LogisticRegression()
+    lr.fit(X_train, y_train)
+    return lr
+
+
 # Finds all possible mentions and turns them into embedding vectors
 # Returns embedding vector for each span and whether or not each is a mention
-def embed_mentions(training_data, L):
+def embed_mentions(training_data, L, cap):
     labels = []
     spans = []
 
-    toy_data = 100
     corpus = ConllCorpus()
-    corpus.add_data(training_data, toy_data)
+    corpus.add_data(training_data, cap)
     for conll_file in corpus.docs:
         # find all word clusters
         all_clusters = conll_file.clusters
@@ -189,7 +200,6 @@ def embed_mentions(training_data, L):
         all_words = conll_file.words
         all_clusters = list(all_clusters.values())
         all_clusters = set([phrase for phrases in all_clusters for phrase in phrases])
-        # print(all_clusters)
 
         for index,item in enumerate(all_words):
             # just using a summed sentence embedding here
@@ -209,21 +219,24 @@ def embed_mentions(training_data, L):
                             break
                     if found_in_cluster:
                         labels.append(np.array([0, 1]))
+                        # labels.append(1)
                     else:
                         labels.append(np.array([1, 0]))
+                        # labels.append(0)
+
+    print(sum(labels)[1] / sum(sum(labels)), '% of spans are mentions')  # debug
 
     return np.array(spans), np.array(labels)
 
 
 # Finds all possible pairs of mentions and turns them into embedding vectors
 # Returns all pairs and whether each corefers or not
-def correspondances(training_data, L, pruning_model=None):
+def correspondances(training_data, L, cap, pruning_model=None):
     labels = []
     pairs = []
 
-    toy_data = 100
     corpus = ConllCorpus()
-    corpus.add_data(training_data, toy_data)
+    corpus.add_data(training_data, cap)
     for conll_file in corpus.docs:
         # find all word clusters
         all_clusters = conll_file.clusters
@@ -243,7 +256,10 @@ def correspondances(training_data, L, pruning_model=None):
                     # print(words, pruning_model.predict(np.array([sum_val]))[0][1])
                     if np.size(sum_val) != 20:
                         continue
-                    if pruning_model and np.argmax(pruning_model.predict(np.array([sum_val]))) == 0:
+                    mention = pruning_model.predict(np.array([sum_val]))
+                    # print(mention)  # debug
+                    if pruning_model and not np.argmax(mention[0, :]):
+                    # if pruning_model and mention[0, 1] > .25:
                         continue
                     possible_mentions.append((words, sum_val))
         print([men[0] for men in possible_mentions])
@@ -258,8 +274,10 @@ def correspondances(training_data, L, pruning_model=None):
                         break
                 if same_cluster:
                     labels.append(np.array([0, 1]))
+                    # labels.append(1)
                 else:
                     labels.append(np.array([1, 0]))
+                    # labels.append(0)
                 # print(span1, span2, labels[-1])  # debug
 
     return np.array(pairs), np.array(labels)
@@ -267,13 +285,15 @@ def correspondances(training_data, L, pruning_model=None):
 
 if __name__ == '__main__':
     # CREATING MENTION DATA
-    X_train_mention, y_train_mention = embed_mentions('conll-2012/train/', 10)
-    X_test_mention, y_test_mention = embed_mentions('conll-2012/test/', 10)
-    print(X_train_mention.shape, y_train_mention.shape, X_test_mention.shape, y_test_mention.shape)
+    X_train_mention, y_train_mention = embed_mentions('conll-2012/train/', 10, 500)
+    print(X_train_mention.shape, y_train_mention.shape)
+    X_dev_mention, y_dev_mention = embed_mentions('conll-2012/dev/', 10, 500)
+    # X_test_mention, y_test_mention = embed_mentions('conll-2012/test/', 10, 500)
+    print(X_dev_mention.shape, y_dev_mention.shape)
 
     # SAVING MENTION DATA
     print('saving npy files...')
-    items = [X_train_mention, y_train_mention, X_test_mention, y_test_mention]
+    items = [X_train_mention, y_train_mention, X_dev_mention, y_dev_mention]
     names = ['X_train.npy', 'y_train.npy', 'X_test.npy', 'y_test.npy']
 
     for index, name in enumerate(names):
@@ -302,19 +322,21 @@ if __name__ == '__main__':
 
     # CREATING MENTION NEURAL NET
     sm = ffnn_mention(np.array(X_train_mention), np.array(y_train_mention))
-    print(sm.evaluate(np.array(X_test_mention), np.array(y_test_mention)))
-    y_pred_mention = sm.predict(X_test_mention)
-    for i in range(len(y_test_mention)):
-        if np.argmax(y_test_mention[i]) == 1:
-            print(y_pred_mention[i])
+    # sm = lr_mention(np.array(X_dev_mention), np.array(y_dev_mention))
+    print(sm.evaluate(np.array(X_dev_mention), np.array(y_dev_mention)))
+    # y_pred_mention = sm.predict(X_dev_mention)
+    # for i in range(len(y_dev_mention)):
+    #     if np.argmax(y_dev_mention[i]) == 1:
+    #         print(y_pred_mention[i])
 
     # CREATING COREFERENCE DATA
-    X_train_coref, y_train_coref = correspondances('conll-2012/train/', 10, pruning_model=sm)
-    X_test_coref, y_test_coref = correspondances('conll-2012/test/', 10, pruning_model=sm)
+    X_train_coref, y_train_coref = correspondances('conll-2012/train/', 10, 500, pruning_model=sm)
+    X_dev_coref, y_dev_coref = correspondances('conll-2012/dev/', 10, 500, pruning_model=sm)
+    # X_test_coref, y_test_coref = correspondances('conll-2012/test/', 10, 500, pruning_model=sm)
 
     # SAVING COREFERENCE DATA
     print('saving npy files...')
-    items = [X_train_coref, y_train_coref, X_test_coref, y_test_coref]
+    items = [X_train_coref, y_train_coref, X_dev_coref, y_dev_coref]
     names = ['X_train_coref.npy', 'y_train_coref.npy', 'X_test_coref.npy', 'y_test_coref.npy']
     for index, name in enumerate(names):
         np.save(name, items[index])
@@ -325,17 +347,19 @@ if __name__ == '__main__':
     #
     # y_train_coref = np.vstack((np.load('y_train_coref.npy')))
     # y_test_coref = np.vstack((np.load('y_test_coref.npy')))
-    print(X_train_coref.shape, y_train_coref.shape, X_test_coref.shape, y_test_coref.shape)
+    print(X_train_coref.shape, y_train_coref.shape, X_dev_coref.shape, y_dev_coref.shape)
 
     # CREATING COREFERENCE NEURAL NET
     sa = ffnn_coreference(X_train_coref, y_train_coref)
-    print(sa.evaluate(X_test_coref, y_test_coref))
+    # sa = lr_coreference(X_train_coref, y_dev_coref)
+    print(sa.evaluate(X_dev_coref, y_dev_coref))
+    print(zip(sa.predict(X_dev_coref), y_dev_coref))
 
     # RESULTS
-    results = sa.predict(X_test_coref)
+    results = sa.predict(X_dev_coref)
     bin_results = [np.argmax(arr) for arr in results]
     print(sum(bin_results), bin_results[:20])  # If 0, we have a problem
-    bin_y = [np.argmax(arr) for arr in y_test_coref][:20]
+    bin_y = [np.argmax(arr) for arr in y_dev_coref][:20]
     print(sum(bin_y), bin_y[:20])
 
 
