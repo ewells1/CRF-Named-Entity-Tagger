@@ -48,6 +48,7 @@ class ConllFile:
         ifile = codecs.open(file_name, encoding='utf8')
         ifile.readline()  # header
 
+        self.name = file_name.split('/')[-1]
         self.words = []
         self.trees = []
         self.nes = []
@@ -170,5 +171,5 @@ if __name__ == '__main__':
     print([(word.word, word.clusters) for word in file.words])
     # print(file.nes)
     # print(file.clusters)
-    # print(file.nps())
+    print(file.nps())
     # print([item.word for item in file.words])

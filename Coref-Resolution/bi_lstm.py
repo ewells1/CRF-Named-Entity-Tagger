@@ -5,6 +5,7 @@ import gensim
 from Project2.read_data import ConllCorpus
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+import codecs
 
 from keras.models import Sequential
 from keras.layers import Embedding, LSTM
@@ -200,12 +201,17 @@ def embed_mentions(training_data, L, cap):
         all_words = conll_file.words
         all_clusters = list(all_clusters.values())
         all_clusters = set([phrase for phrases in all_clusters for phrase in phrases])
+        nps = conll_file.nps()
 
-        for index,item in enumerate(all_words):
+        for index, item in enumerate(all_words):
             # just using a summed sentence embedding here
             for size in range(2, L):
                 if size + index <= max:
                     words = ' '.join([item.word for item in all_words[index:index+size]])
+
+                    if words not in nps:
+                        continue
+
                     intermediate_val = [embed_model.wv[item.word.lower()] if item.word.lower() in embed_model.wv else [0 for index in range(20)] for item in all_words[index:index+size]]
                     sum_val = np.sum(intermediate_val, 0)
                     if np.size(sum_val) != 20:
@@ -245,15 +251,17 @@ def correspondances(training_data, L, cap, pruning_model=None):
 
         all_words = conll_file.words
         possible_mentions = []
+        nps = conll_file.nps()
 
         for index, item in enumerate(all_words):
             # just using a summed sentence embedding here
             for size in range(2, L):
                 if size + index <= max:
                     words = ' '.join([item.word for item in all_words[index:index+size]])
+                    if words not in nps:
+                        continue
                     intermediate_val = [embed_model.wv[item.word.lower()] if item.word.lower() in embed_model.wv else [0 for index in range(20)] for item in all_words[index:index+size]]
                     sum_val = np.sum(intermediate_val, 0)
-                    # print(words, pruning_model.predict(np.array([sum_val]))[0][1])
                     if np.size(sum_val) != 20:
                         continue
                     mention = pruning_model.predict(np.array([sum_val]))
@@ -262,7 +270,7 @@ def correspondances(training_data, L, cap, pruning_model=None):
                     # if pruning_model and mention[0, 1] > .25:
                         continue
                     possible_mentions.append((words, sum_val))
-        print([men[0] for men in possible_mentions])
+        # print([men[0] for men in possible_mentions])  # debug - see what it's pulling out
 
         for span1, vec1 in possible_mentions:
             for span2, vec2 in possible_mentions:
@@ -283,18 +291,123 @@ def correspondances(training_data, L, cap, pruning_model=None):
     return np.array(pairs), np.array(labels)
 
 
+def tag(test_data, sa, sm, L, cap):
+    corpus = ConllCorpus()
+    corpus.add_data(test_data, cap)
+    for conll_file in corpus.docs:
+        # instead of just giving the word, give an arbitrary sized span, with label 1 or 0
+        max = len(conll_file.words)
+
+        all_words = conll_file.words
+        possible_mentions = []
+        nps = conll_file.nps()
+        check1 = 0
+        check2 = 0
+        check3 = 0
+        check4 = 0
+
+        for index, item in enumerate(all_words):
+            # just using a summed sentence embedding here
+            for size in range(2, L):
+                if size + index <= max:
+                    words = all_words[index:index + size]
+                    words_str = ' '.join(word.word for word in words)
+                    check1 += 1
+                    if words_str not in nps:
+                        continue
+                    check2 += 1
+
+                    intermediate_val = [embed_model.wv[item.word.lower()] if item.word.lower() in embed_model.wv else
+                                        [0 for index in range(20)] for item in all_words[index:index+size]]
+                    sum_val = np.sum(intermediate_val, 0)
+                    # print(np.shape(intermediate_val), np.shape(sum_val))  # debug
+                    if np.size(sum_val) != 20:
+                        continue
+                    check3 += 1
+
+                    mention = sm.predict(np.array([sum_val]))
+                    # print(mention)  # debug
+                    if not np.argmax(mention[0, :]):
+                    # if mention[0, 1] > .25:
+                        continue
+                    check4 += 1
+                    possible_mentions.append(((index, index + size), sum_val))
+        print(check1, check2, check3, check4)  # debug
+
+        clusters = []
+        for span1, vec1 in possible_mentions:
+            for span2, vec2 in possible_mentions:
+                pair = np.array([np.array([vec1, vec2])])
+                same_cluster = np.argmax(sa.predict(pair))
+                if same_cluster == 1:
+                    added = False
+                    for cluster in clusters:
+                        if span1 in cluster or span2 in cluster:
+                            cluster.add(span1)
+                            cluster.add(span2)
+                            added = True
+                            break
+                    if not added:
+                        clusters.append(set())
+                        clusters[-1].add(span1)
+                        clusters[-1].add(span2)
+                else:
+                    for span in [span1, span2]:
+                        added = False
+                        for cluster in clusters:
+                            if span in cluster:
+                                added = True
+                                break
+                        if not added:
+                            clusters.append(set())
+                            clusters[-1].add(span)
+        print(len(clusters), 'clusters created')  # debug
+
+        for i, cluster in enumerate(clusters):
+            for start, end in cluster:
+                for j in range(start, end):
+                    if i not in all_words[j].clusters:
+                        all_words[j].clusters.append(i)
+
+        oname = conll_file.name.split('.')
+        ofile = codecs.open('results/' + oname[0] + '_pred.' + oname[1], 'w', encoding='utf-8')
+        for i in range(len(all_words)):
+            cluster_str = ''
+            for cluster in all_words[i].clusters:
+                if i > 0 and cluster not in all_words[i-1].clusters:
+                    if len(cluster_str) > 0:
+                        cluster_str += '| '
+                    cluster_str += '(' + str(cluster)
+                if i > 0 and cluster not in all_words[i-1].clusters:
+                    if len(cluster_str) > 0 and int(cluster_str.split('(')[-1]) != cluster:
+                        cluster_str += ' |' + str(cluster)
+                    elif len(cluster_str) > 0:
+                        cluster_str += ')'
+                    else:
+                        cluster_str += str(cluster) + ')'
+            if len(cluster_str) < 1:
+                cluster_str = '-'
+            ofile.write(all_words[i].word + '\t' + cluster_str + '\n')
+        ofile.close()
+
+
 if __name__ == '__main__':
+    # PARAMS
+    L = 6
+    train_size = 500
+    dev_size = 100
+    test_size = 100
+
     # CREATING MENTION DATA
-    X_train_mention, y_train_mention = embed_mentions('conll-2012/train/', 10, 500)
+    X_train_mention, y_train_mention = embed_mentions('conll-2012/train/', L, train_size)
     print(X_train_mention.shape, y_train_mention.shape)
-    X_dev_mention, y_dev_mention = embed_mentions('conll-2012/dev/', 10, 500)
-    # X_test_mention, y_test_mention = embed_mentions('conll-2012/test/', 10, 500)
+    X_dev_mention, y_dev_mention = embed_mentions('conll-2012/dev/', L, dev_size)
     print(X_dev_mention.shape, y_dev_mention.shape)
 
     # SAVING MENTION DATA
     print('saving npy files...')
     items = [X_train_mention, y_train_mention, X_dev_mention, y_dev_mention]
-    names = ['X_train.npy', 'y_train.npy', 'X_test.npy', 'y_test.npy']
+    names = ['X_train.npy', 'y_train.npy', 'X_dev.npy', 'y_dev.npy']
 
     for index, name in enumerate(names):
         # with open(name, 'w') as file:
@@ -330,14 +443,13 @@ if __name__ == '__main__':
     #         print(y_pred_mention[i])
 
     # CREATING COREFERENCE DATA
-    X_train_coref, y_train_coref = correspondances('conll-2012/train/', 10, 500, pruning_model=sm)
-    X_dev_coref, y_dev_coref = correspondances('conll-2012/dev/', 10, 500, pruning_model=sm)
-    # X_test_coref, y_test_coref = correspondances('conll-2012/test/', 10, 500, pruning_model=sm)
+    X_train_coref, y_train_coref = correspondances('conll-2012/train/', L, train_size, pruning_model=sm)
+    X_dev_coref, y_dev_coref = correspondances('conll-2012/dev/', L, dev_size, pruning_model=sm)
 
     # SAVING COREFERENCE DATA
     print('saving npy files...')
     items = [X_train_coref, y_train_coref, X_dev_coref, y_dev_coref]
-    names = ['X_train_coref.npy', 'y_train_coref.npy', 'X_test_coref.npy', 'y_test_coref.npy']
+    names = ['X_train_coref.npy', 'y_train_coref.npy', 'X_dev_coref.npy', 'y_dev_coref.npy']
     for index, name in enumerate(names):
         np.save(name, items[index])
 
@@ -353,7 +465,6 @@ if __name__ == '__main__':
     sa = ffnn_coreference(X_train_coref, y_train_coref)
     # sa = lr_coreference(X_train_coref, y_dev_coref)
     print(sa.evaluate(X_dev_coref, y_dev_coref))
-    print(zip(sa.predict(X_dev_coref), y_dev_coref))
 
     # RESULTS
     results = sa.predict(X_dev_coref)
@@ -361,5 +472,8 @@ if __name__ == '__main__':
     print(sum(bin_results), bin_results[:20])  # If 0, we have a problem
     bin_y = [np.argmax(arr) for arr in y_dev_coref][:20]
     print(sum(bin_y), bin_y[:20])
+
+    tag('conll-2012/test', sa, sm, L, test_size)
+
 
 
