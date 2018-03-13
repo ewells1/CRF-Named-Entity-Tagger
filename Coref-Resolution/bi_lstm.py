@@ -167,10 +167,18 @@ def ffnn_mention(X_train, y_train):
 
 # Neural net for deciding if two spans corefer
 def ffnn_coreference(X_train, y_train):
-    print(X_train.shape, y_train.shape)
+    # X_train = np.reshape(X_train, (X_train.shape[0], 1, X_train.shape[1]))
+    #_test = np.reshape(X_test, (X_test.shape[0], 1, X_test.shape[1]))
+    print("coreference shapes: " + str(X_train.shape) + str(y_train.shape))
     sa = Sequential()
-    sa.add(Dense(X_train.shape[1], input_shape=(2, X_train.shape[1]), activation='relu'))
-    sa.add(Dense(X_train.shape[1], activation='softmax'))
+    sa.add(Dense(X_train.shape[1], input_dim=X_train.shape[1], activation='relu'))
+    # sa.add(Dense(X_train.shape[2], input_shape=(1, X_train.shape[2]), activation='relu'))
+    sa.add(Dense(2, activation='softmax'))
+
+    for index, layer in enumerate(sa.layers):
+        print("layer " + str(index))
+        print(layer.input_shape)
+        print(layer.output_shape)
     sa.compile(loss='sparse_categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     sa.fit(X_train, y_train, nb_epoch=350, verbose=0)
     return sa
@@ -331,15 +339,15 @@ if __name__ == '__main__':
     # print(sm.predict(X_test_mention))
 
     # CREATING COREFERENCE DATA
-    X_train_coref, y_train_coref = correspondances('conll-2012/train/', 10, pruning_model=sm)
-    X_test_coref, y_test_coref = correspondances('conll-2012/test/', 10, pruning_model=sm)
+    # X_train_coref, y_train_coref = correspondances('conll-2012/train/', 10, pruning_model=sm)
+    # X_test_coref, y_test_coref = correspondances('conll-2012/test/', 10, pruning_model=sm)
 
     # SAVING COREFERENCE DATA
-    print('saving npy files...')
-    items = [X_train_coref, y_train_coref, X_test_coref, y_test_coref]
-    names = ['X_train_coref.npy', 'y_train_coref.npy', 'X_test_coref.npy', 'y_test_coref.npy']
-    for index, name in enumerate(names):
-        np.save(name, items[index])
+    # print('saving npy files...')
+    # items = [X_train_coref, y_train_coref, X_test_coref, y_test_coref]
+    # names = ['X_train_coref.npy', 'y_train_coref.npy', 'X_test_coref.npy', 'y_test_coref.npy']
+    # for index, name in enumerate(names):
+    #     np.save(name, items[index])
 
 
     # # LOADING COREFERENCE DATA
@@ -350,18 +358,12 @@ if __name__ == '__main__':
     print(np.load('y_test_coref.npy'))
     y_test_coref = np.vstack((np.load('y_test_coref.npy')))
     print(X_train_coref.shape, y_train_coref.shape, X_test_coref.shape, y_test_coref.shape)
-    # LOADING COREFERENCE DATA
-    # X_train_coref = np.vstack((np.load('X_train_coref.npy')))
-    # X_test_coref = np.vstack((np.load('X_test_coref.npy')))
-    #
-    # y_train_coref = np.vstack((np.load('y_train_coref.npy')))
-    # y_test_coref = np.vstack((np.load('y_test_coref.npy')))
 
 
     # CREATING COREFERENCE NEURAL NET
-    # sa = ffnn_coreference(X_train_coref, y_train_coref)
-    # print(sm.evaluate(X_test_coref, y_test_coref))
-    # print(sm.predict(X_train_coref))
+    sa = ffnn_coreference(X_train_coref, y_train_coref)
+    print(sm.evaluate(X_test_coref, y_test_coref))
+    print(sm.predict(X_train_coref))
 
     # RESULTS
 
