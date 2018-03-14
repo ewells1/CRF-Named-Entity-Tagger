@@ -48,6 +48,7 @@ class ConllFile:
         ifile = codecs.open(file_name, encoding='utf8')
         ifile.readline()  # header
 
+        self.name = file_name.split('/')[-1]
         self.words = []
         self.trees = []
         self.nes = []
@@ -105,14 +106,16 @@ class ConllFile:
                 l_cl = l.search(part)
 
                 if u_cl:
-                    self.clusters[u_cl.group(1)].append(((i, i+1), word))
+                    # self.clusters[u_cl.group(1)].append(((i, i+1), word))
+                    self.clusters[u_cl.group(1)].append(word)
                     word_clusters.append(int(u_cl.group(1)))
                 elif b_cl:
                     temp_clusters.append([b_cl.group(1), i, word])
                     word_clusters.append(int(b_cl.group(1)))
                 elif l_cl:
                     finished = temp_clusters.pop()
-                    self.clusters[finished[0]].append(((finished[1], i+1), ' '.join(finished[2:])))
+                    # self.clusters[finished[0]].append(((finished[1], i+1), ' '.join(finished[2:])))
+                    self.clusters[finished[0]].append(' '.join(finished[2:]))
 
             self.words.append(Word(word, lemma, pos, word_clusters))
             i += 1
@@ -168,5 +171,5 @@ if __name__ == '__main__':
     print([(word.word, word.clusters) for word in file.words])
     # print(file.nes)
     # print(file.clusters)
-    # print(file.nps())
+    print(file.nps())
     # print([item.word for item in file.words])

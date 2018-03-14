@@ -2,8 +2,20 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="601b4aac-4313-42a4-8f4e-6d0ece5d99c3" name="Default" comment="">
+<<<<<<< HEAD
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Coref-Resolution/bi_lstm.py" afterPath="$PROJECT_DIR$/Coref-Resolution/bi_lstm.py" />
+=======
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Coref-Resolution/X_test.npy" afterPath="$PROJECT_DIR$/Coref-Resolution/X_test.npy" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Coref-Resolution/X_train.npy" afterPath="$PROJECT_DIR$/Coref-Resolution/X_train.npy" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Coref-Resolution/bi_lstm_pos_tagger.py" afterPath="$PROJECT_DIR$/Coref-Resolution/bi_lstm_pos_tagger.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Coref-Resolution/mention.model.architecture" afterPath="$PROJECT_DIR$/Coref-Resolution/mention.model.architecture" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Coref-Resolution/mention.test.auto" afterPath="$PROJECT_DIR$/Coref-Resolution/mention.test.auto" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Coref-Resolution/y_test.npy" afterPath="$PROJECT_DIR$/Coref-Resolution/y_test.npy" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Coref-Resolution/y_train.npy" afterPath="$PROJECT_DIR$/Coref-Resolution/y_train.npy" />
+>>>>>>> f2e3b3b360449b2c6876d5df223a3e6b005dd5ed
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -14,6 +26,7 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+<<<<<<< HEAD
       <file leaf-file-name=".gitignore" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/.gitignore">
           <provider selected="true" editor-type-id="text-editor">
@@ -29,6 +42,13 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="253">
               <caret line="182" column="0" lean-forward="false" selection-start-line="182" selection-start-column="0" selection-end-line="182" selection-end-column="0" />
+=======
+      <file leaf-file-name="bi_lstm_pos_tagger.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Coref-Resolution/bi_lstm_pos_tagger.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="266">
+              <caret line="262" column="52" lean-forward="true" selection-start-line="262" selection-start-column="52" selection-end-line="262" selection-end-column="52" />
+>>>>>>> f2e3b3b360449b2c6876d5df223a3e6b005dd5ed
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -36,6 +56,7 @@
           </provider>
         </entry>
       </file>
+<<<<<<< HEAD
       <file leaf-file-name="models.py" pinned="false" current-in-tab="false">
         <entry file="file:///usr/local/lib/python3.6/site-packages/keras/models.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -61,6 +82,13 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="211">
               <caret line="369" column="0" lean-forward="false" selection-start-line="369" selection-start-column="0" selection-end-line="369" selection-end-column="0" />
+=======
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="120">
+              <caret line="8" column="5" lean-forward="false" selection-start-line="8" selection-start-column="5" selection-end-line="8" selection-end-column="5" />
+>>>>>>> f2e3b3b360449b2c6876d5df223a3e6b005dd5ed
               <folding />
             </state>
           </provider>
@@ -165,7 +193,10 @@
         <option value="$PROJECT_DIR$/Coref-Resolution/X_train.npy" />
         <option value="$PROJECT_DIR$/Coref-Resolution/bi_lstm_pos_tagger.py" />
         <option value="$PROJECT_DIR$/.gitignore" />
+<<<<<<< HEAD
         <option value="$PROJECT_DIR$/Coref-Resolution/bi_lstm.py" />
+=======
+>>>>>>> f2e3b3b360449b2c6876d5df223a3e6b005dd5ed
       </list>
     </option>
   </component>
@@ -529,6 +560,16 @@
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
+=======
+    <entry file="file:///usr/local/lib/python3.6/site-packages/keras/engine/training.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="196">
+          <caret line="140" column="0" lean-forward="false" selection-start-line="140" selection-start-column="0" selection-end-line="140" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+>>>>>>> f2e3b3b360449b2c6876d5df223a3e6b005dd5ed
     <entry file="file:///usr/local/lib/python3.6/site-packages/keras/utils/conv_utils.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="188">
@@ -703,13 +744,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Coref-Resolution/mention.test.auto">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Coref-Resolution/X_test.npy">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -717,8 +751,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Coref-Resolution/mention.test.auto">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Coref-Resolution/bi_lstm_pos_tagger.py">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
         <state relative-caret-position="300">
           <caret line="20" column="26" lean-forward="true" selection-start-line="20" selection-start-column="26" selection-end-line="20" selection-end-column="26" />
           <folding />
@@ -761,9 +804,21 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="253">
           <caret line="182" column="0" lean-forward="false" selection-start-line="182" selection-start-column="0" selection-end-line="182" selection-end-column="0" />
+=======
+        <state relative-caret-position="266">
+          <caret line="262" column="52" lean-forward="true" selection-start-line="262" selection-start-column="52" selection-end-line="262" selection-end-column="52" />
+>>>>>>> f2e3b3b360449b2c6876d5df223a3e6b005dd5ed
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="5" lean-forward="false" selection-start-line="8" selection-start-column="5" selection-end-line="8" selection-end-column="5" />
+          <folding />
         </state>
       </provider>
     </entry>
