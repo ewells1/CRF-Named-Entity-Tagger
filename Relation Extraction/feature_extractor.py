@@ -51,7 +51,7 @@ def write_to_file(path):
     for x in range (len(relations)-1):
         arg1,arg2 = words[x][0], words[x][1]
         arg1_type,arg2_type = types[x][0], types[x][1]
-        file_out.write(relations[0]+" ")
+        file_out.write(relations[x]+" ")
         file_out.write("arg1=" + arg1 + " " + "arg2=" + arg2 + " ")
         file_out.write("arg1_type=" + arg1_type + " " + "arg2_type=" + arg2_type + " ")
         ### key error: eg. Bshar_Assad (b/c "Bshar_Assad" is one word in rel-trainset.gold, but in postagged files, they are "Bshar" and "Assad" )
