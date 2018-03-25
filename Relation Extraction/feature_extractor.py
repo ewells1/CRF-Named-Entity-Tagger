@@ -5,7 +5,7 @@ parsed_path = './data/parsed-files'
 train_path = './data/rel-trainset.gold'
 features_out_path = './features.txt'
 
-# read rel-trainset.gold, get the relation and the words
+# read rel-trainset.gold, get relations, word itself, and word types
 def read_train_gold(path):
     rel_bools = []
     words = []
