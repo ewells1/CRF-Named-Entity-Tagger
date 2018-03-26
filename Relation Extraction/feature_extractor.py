@@ -3,7 +3,9 @@ import os
 postagged_path = './data/postagged-files'
 parsed_path = './data/parsed-files'
 train_path = './data/rel-trainset.gold'
-features_out_path = './features.txt'
+dev_path = './data/rel-devset.gold'
+train_features_out_path = './train_features.txt'
+dev_features_out_path = './dev_features.txt'
 
 # read rel-trainset.gold, get relations, word itself, and word types
 def read_train_gold(path):
@@ -43,19 +45,32 @@ def read_pos_files(path):
 
 # def read_parsed_files(path):
 
+# For all the little fixes that need to be made to get POS to work
+def rel_to_tokenized(string):
+    if '/' in string:
+        string = string.split('/')[-1]  # If compound, just use second
+    if '_' in string:
+        string = string.split('_')[-1]  # Assuming pos is pos of last word
+    return string
+
 # write all features to file
-def write_to_file(path):
+def write_to_file(path, gold_file, train=True):
     file_out = open(path, 'w')
-    relations, words, types = read_train_gold(train_path)
+    relations, words, types = read_train_gold(gold_file)
     pos = read_pos_files(postagged_path)
-    for x in range (len(relations)-1):
+    print(pos)
+    for x in range(len(relations)-1):
         arg1,arg2 = words[x][0], words[x][1]
         arg1_type,arg2_type = types[x][0], types[x][1]
-        file_out.write(relations[x]+" ")
+        arg1_pos, arg2_pos = pos[rel_to_tokenized(arg1)], pos[rel_to_tokenized(arg2)]
+        if train:
+            file_out.write(relations[x]+" ")
         file_out.write("arg1=" + arg1 + " " + "arg2=" + arg2 + " ")
         file_out.write("arg1_type=" + arg1_type + " " + "arg2_type=" + arg2_type + " ")
+        file_out.write("arg1_pos=" + arg1_pos + " " + "arg2_pos=" + arg2_pos + " ")
         ### key error: eg. Bshar_Assad (b/c "Bshar_Assad" is one word in rel-trainset.gold, but in postagged files, they are "Bshar" and "Assad" )
         #file_out.write("arg1_pos=" + pos[arg1] + " " + "arg2_pos=" + pos[arg2] + " ")
         file_out.write("\n")
 
-write_to_file(features_out_path)
+write_to_file(train_features_out_path, train_path)
+write_to_file(dev_features_out_path, dev_path, train=False)
