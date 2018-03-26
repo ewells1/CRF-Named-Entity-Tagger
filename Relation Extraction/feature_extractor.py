@@ -58,11 +58,11 @@ def open_context_file(file, mentions):
                 if word.split('_')[0] == mentions[0]:
                     mention_found = True
 
-                    word_features = get_context(index, line, word_features, 'arg1')
+                    word_features = get_context(index, line.split(), word_features, 'arg1')
 
                 if mention_found:
                     if word.split('_')[0] == mentions[1]:
-                        word_features = get_context(index, line, word_features, 'arg2')
+                        word_features = get_context(index, line.split(), word_features, 'arg2')
                         word_features['inbetween_context-words'] = inbetween_words
                         word_features['inbetween_context-distance'] = inbetween_counter
 
@@ -71,6 +71,8 @@ def open_context_file(file, mentions):
                     inbetween_counter += 1
                     inbetween_words += ' ' + word.split('_')[0]
 
+    word_features['arg2_context-1'] = -1
+    word_features['arg2_context+1'] = -1
     word_features['inbetween_context-words'] = inbetween_words
     word_features['inbetween_context-distance'] = inbetween_counter
 
@@ -141,7 +143,7 @@ def write_to_file(path, gold_file, train=True):
         file_out.write("arg1_pos=" + arg1_pos + " " + "arg2_pos=" + arg2_pos + " ")
 
         for key in word_features[x]:
-            file_out.write(key + '=' + word_features[x][key])
+            file_out.write(key + '=' + str(word_features[x][key]) +  ' ')
 
         ### key error: eg. Bshar_Assad (b/c "Bshar_Assad" is one word in rel-trainset.gold, but in postagged files, they are "Bshar" and "Assad" )
         #file_out.write("arg1_pos=" + pos[arg1] + " " + "arg2_pos=" + pos[arg2] + " ")
