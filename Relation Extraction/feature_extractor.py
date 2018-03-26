@@ -1,4 +1,5 @@
 import os
+import re
 
 postagged_path = './data/postagged-files'
 parsed_path = './data/parsed-files'
@@ -14,33 +15,103 @@ def read_train_gold(path):
     types = []
     file = open(path, 'r')
     lines = file.readlines()
+    all_word_feats = []
+
+    file_name = ''
     for line in lines:
-        relation = line.split()[0]
+
+
+        split_line = line.split()
+        relation = split_line[0]
         relation = "no" if relation == "no_rel" else "yes"
-        arg1 = line.split()[7]
-        arg2 = line.split()[13]
-        arg1_type = line.split()[5]
-        arg2_type = line.split()[11]
+        arg1 = split_line[7]
+        arg2 = split_line[13]
+        arg1_type = split_line[5]
+        arg2_type = split_line[11]
         rel_bools.append(relation)
         words.append((arg1, arg2))
         types.append((arg1_type, arg2_type))
-    return rel_bools, words, types
+
+        if split_line[1] != file_name:
+            print("loading: " + file_name)
+            file_name = split_line[1]
+
+
+        word_features = open_context_file(file_name, (arg1, arg2))
+        all_word_feats.append(word_features)
+    return rel_bools, words, types, all_word_feats
+
+def open_context_file(file, mentions):
+
+    with open(os.path.join(postagged_path, file + '.head.rel.tokenized.raw.tag')) as raw_tagged_file:
+        lines = raw_tagged_file.readlines()
+        replace_regex = re.compile('()')
+        cleaned_lines = [replace_regex.sub('', line) for line in lines]
+
+        inbetween_counter = 0
+        inbetween_words = ''
+
+        mention_found = False
+        word_features = {}
+        for line in cleaned_lines[1:]:
+            for index, word in enumerate(line.split()):
+                if word.split('_')[0] == mentions[0]:
+                    mention_found = True
+
+                    word_features = get_context(index, line, word_features, 'arg1')
+
+                if mention_found:
+                    if word.split('_')[0] == mentions[1]:
+                        word_features = get_context(index, line, word_features, 'arg2')
+                        word_features['inbetween_context-words'] = inbetween_words
+                        word_features['inbetween_context-distance'] = inbetween_counter
+
+                        return word_features
+
+                    inbetween_counter += 1
+                    inbetween_words += ' ' + word.split('_')[0]
+
+    word_features['inbetween_context-words'] = inbetween_words
+    word_features['inbetween_context-distance'] = inbetween_counter
+
+    return word_features
 
 # read postagged-files, get pos tags
+def get_context(mention_index, line, curr_dict, arg):
+    if mention_index == 0:
+        curr_dict[arg + '_context-1'] = -1
+    else:
+        curr_dict[arg + '_context-1'] = line[mention_index-1]
+
+    if mention_index == len(line) - 1:
+        curr_dict[arg + '_context+1'] = -1
+    else:
+        curr_dict[arg + '_context+1'] = line[mention_index+1]
+
+    return curr_dict
+
 def read_pos_files(path):
+
+    #while we're working through the pos files, also get the context information for relations
     pos_dict = {}
     for filename in os.listdir(path):
+
+
         sentID = (".").join(filename.split(".")[:3])
         file_path = path + "/" + filename
         with open(file_path) as f:
             lines = (line.rstrip() for line in f)
             lines = (line for line in lines if line and sentID not in line)
+
+
             for line in lines:
+
                 word_pos = line.split()
                 word = [wp.split('_')[0] for wp in word_pos]
                 pos = [wp.split('_')[1] for wp in word_pos]
                 temp = dict(zip(word,pos))
                 pos_dict.update(temp)
+
     return pos_dict
 
 # def read_parsed_files(path):
@@ -56,7 +127,7 @@ def rel_to_tokenized(string):
 # write all features to file
 def write_to_file(path, gold_file, train=True):
     file_out = open(path, 'w')
-    relations, words, types = read_train_gold(gold_file)
+    relations, words, types, word_features = read_train_gold(gold_file)
     pos = read_pos_files(postagged_path)
     print(pos)
     for x in range(len(relations)-1):
@@ -68,6 +139,10 @@ def write_to_file(path, gold_file, train=True):
         file_out.write("arg1=" + arg1 + " " + "arg2=" + arg2 + " ")
         file_out.write("arg1_type=" + arg1_type + " " + "arg2_type=" + arg2_type + " ")
         file_out.write("arg1_pos=" + arg1_pos + " " + "arg2_pos=" + arg2_pos + " ")
+
+        for key in word_features[x]:
+            file_out.write(key + '=' + word_features[x][key])
+
         ### key error: eg. Bshar_Assad (b/c "Bshar_Assad" is one word in rel-trainset.gold, but in postagged files, they are "Bshar" and "Assad" )
         #file_out.write("arg1_pos=" + pos[arg1] + " " + "arg2_pos=" + pos[arg2] + " ")
         file_out.write("\n")
