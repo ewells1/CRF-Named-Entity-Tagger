@@ -143,7 +143,11 @@ def write_to_file(path, gold_file, train=True):
         file_out.write("arg1_pos=" + arg1_pos + " " + "arg2_pos=" + arg2_pos + " ")
 
         for key in word_features[x]:
-            file_out.write(key + '=' + str(word_features[x][key]) +  ' ')
+            if key == 'inbetween_context-distance':
+                file_out.write(key + '=' + str(word_features[x][key]) +  ' ')
+            else:
+                file_out.write(key + '="' + str(word_features[x][key]) +  '" ')
+
 
         ### key error: eg. Bshar_Assad (b/c "Bshar_Assad" is one word in rel-trainset.gold, but in postagged files, they are "Bshar" and "Assad" )
         #file_out.write("arg1_pos=" + pos[arg1] + " " + "arg2_pos=" + pos[arg2] + " ")
