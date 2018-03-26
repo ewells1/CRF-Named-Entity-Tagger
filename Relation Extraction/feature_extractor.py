@@ -23,7 +23,7 @@ def read_train_gold(path):
 
         split_line = line.split()
         relation = split_line[0]
-        relation = "no" if relation == "no_rel" else "yes"
+        # relation = "no" if relation == "no_rel" else "yes"
         arg1 = split_line[7]
         arg2 = split_line[13]
         arg1_type = split_line[5]
@@ -132,7 +132,7 @@ def write_to_file(path, gold_file, train=True):
     relations, words, types, word_features = read_train_gold(gold_file)
     pos = read_pos_files(postagged_path)
     print(pos)
-    for x in range(len(relations)-1):
+    for x in range(len(relations)):
         arg1,arg2 = words[x][0], words[x][1]
         arg1_type,arg2_type = types[x][0], types[x][1]
         arg1_pos, arg2_pos = pos[rel_to_tokenized(arg1)], pos[rel_to_tokenized(arg2)]
