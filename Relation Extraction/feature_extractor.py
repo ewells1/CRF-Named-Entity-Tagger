@@ -84,13 +84,17 @@ def open_context_file(file, mentions):
 def get_context(mention_index, line, curr_dict, arg):
     if mention_index == 0:
         curr_dict[arg + '_context-1'] = -1
+        curr_dict[arg + '_context-1_pos'] = -1
     else:
-        curr_dict[arg + '_context-1'] = line[mention_index-1]
+        curr_dict[arg + '_context-1'] = line[mention_index-1].split('_')[0]
+        curr_dict[arg + '_context-1_pos'] = line[mention_index - 1].split('_')[1]
 
     if mention_index == len(line) - 1:
         curr_dict[arg + '_context+1'] = -1
+        curr_dict[arg + '_context+1_pos'] = -1
     else:
-        curr_dict[arg + '_context+1'] = line[mention_index+1]
+        curr_dict[arg + '_context+1'] = line[mention_index+1].split('_')[0]
+        curr_dict[arg + '_context+1_pos'] = line[mention_index+1].split('_')[1]
 
     return curr_dict
 
