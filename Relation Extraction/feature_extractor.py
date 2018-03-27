@@ -68,7 +68,7 @@ def read_train_gold(path):
     all_distances.extend(open_syntax_file(file_name, mentions))
     while len(all_distances) != len(all_word_feats):
         all_distances.append(-2)
-    return rel_bools, words, types, all_word_feats, all_distances
+    return rel_bools, words, types, all_word_feats, all_distances, trees, indices
 
 def open_syntax_file(file, mentions):
     with open(os.path.join(parsed_path, file + '.head.rel.tokenized.raw.parse')) as raw_syntax_file:
@@ -305,7 +305,7 @@ def rel_to_tokenized(string):
 def write_to_file(path, gold_file, train=True):
     file_out = open(path, 'w')
 
-    relations, words, types, word_features, distances = read_train_gold(gold_file)
+    relations, words, types, word_features, distances, trees, indices = read_train_gold(gold_file)
 
     # relations, words, types, word_features, indices, trees = read_train_gold(gold_file)
     pos = read_pos_files(postagged_path)
@@ -317,19 +317,27 @@ def write_to_file(path, gold_file, train=True):
         arg1_type,arg2_type = types[x][0], types[x][1]
         arg1_pos, arg2_pos = pos[rel_to_tokenized(arg1)], pos[rel_to_tokenized(arg2)]
         # arg1_gaz, arg2_gaz = arg1.replace('_', ' ') in locations, arg2.replace('_', ' ') in locations
-        common_words = len(set(arg1.split('_')).intersection(set(arg2.split('_')))) > 0
-        # arg1_i, arg2_i = indices[x][0], indices[x][0]
+        common_words = set(arg1.split('_')).intersection(set(arg2.split('_')))
+        num_common_words = len(common_words) > 0
+        arg1_i, arg2_i = indices[x][0], indices[x][0]
         if train:
             file_out.write(relations[x]+" ")
         file_out.write("arg1=" + arg1 + " " + "arg2=" + arg2 + " ")
         file_out.write("arg1_type=" + arg1_type + " " + "arg2_type=" + arg2_type + " ")
         file_out.write("arg1_pos=" + arg1_pos + " " + "arg2_pos=" + arg2_pos + " ")
         # file_out.write("arg1_gaz=" + str(arg1_gaz) + " " + "arg2_gaz=" + str(arg2_gaz) + " ")
-        file_out.write("common_words=" + str(common_words) + " ")
-        # file_out.write("same_sent=" + str(arg1_i[0] == arg2_i[0]))
+        file_out.write("num_common_words=" + str(num_common_words) + " ")
+        file_out.write("common_words=" + '_'.join(common_words) + " ")
+        file_out.write("same_sent=" + str(arg1_i[0] == arg2_i[0]))
         # print(arg1_i)
-        # file_out.write("arg1_bnp=" + base_np(trees[x][arg1_i[0]], arg1_i))
-        # file_out.write("arg2_bnp=" + base_np(trees[x][arg2_i[0]], arg2_i))
+        try:
+            file_out.write("arg1_bnp=" + base_np(trees[x][arg1_i[0]], arg1_i))
+        except IndexError:
+            file_out.write("arg1_bnp=None")
+        try:
+            file_out.write("arg2_bnp=" + base_np(trees[x][arg2_i[0]], arg2_i))
+        except IndexError:
+            file_out.write("arg2_bnp=None")
         for key in word_features[x]:
             if key == 'inbetween_context-distance':
                 file_out.write(key + '=' + str(word_features[x][key]) +  ' ')
