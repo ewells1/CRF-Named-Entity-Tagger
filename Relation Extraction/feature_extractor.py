@@ -1,5 +1,6 @@
 import os
 import re
+from nltk.tree import ParentedTree
 
 postagged_path = './data/postagged-files'
 parsed_path = './data/parsed-files'
@@ -17,8 +18,9 @@ def read_train_gold(path):
     file = open(path, 'r')
     lines = file.readlines()
     all_word_feats = []
-
+    all_distances = []
     file_name = ''
+    mentions = []
     for line in lines:
 
 
@@ -33,14 +35,118 @@ def read_train_gold(path):
         words.append((arg1, arg2))
         types.append((arg1_type, arg2_type))
 
+        mentions.append((arg1, arg2))
         if split_line[1] != file_name:
+            if file_name != '':
+                all_distances.extend(open_syntax_file(file_name, mentions))
             print("loading: " + file_name)
             file_name = split_line[1]
+            mentions = []
+
 
 
         word_features = open_context_file(file_name, (arg1, arg2))
+
         all_word_feats.append(word_features)
-    return rel_bools, words, types, all_word_feats
+    all_distances.extend(open_syntax_file(file_name, mentions))
+    while len(all_distances) != len(all_word_feats):
+        all_distances.append(-2)
+    return rel_bools, words, types, all_word_feats, all_distances
+
+def open_syntax_file(file, mentions):
+    with open(os.path.join(parsed_path, file + '.head.rel.tokenized.raw.parse')) as raw_syntax_file:
+        lines = raw_syntax_file.readlines()
+        mention_counter = 0
+        distances = []
+        prev_mention = mentions[mention_counter][0]
+
+        for line in lines:
+            if prev_mention in line:
+                while (mentions[mention_counter][0] == prev_mention) and mention_counter < len(mentions):
+                    if len(line.strip()) == 0:
+                        continue
+                    full_tree = ParentedTree.fromstring(line)
+                    subtrees = ParentedTree.subtrees(full_tree)
+                    arg1_subtrees = []
+                    arg2_subtrees = []
+                    found_m1 = False
+                    found_m2 = False
+                    for subtree in subtrees:
+                        for node in subtree.leaves():
+
+                            if node == mentions[mention_counter][0]:
+                                arg1_subtrees.append(subtree)
+                                found_m1 = True
+                            elif node == mentions[mention_counter][1]:
+                                arg2_subtrees.append(subtree)
+                                found_m2 = True
+
+                            if found_m2 and found_m1:
+                                arg1_height, arg1_subtree = get_smallest_height(arg1_subtrees)
+                                arg2_height, arg2_subtree = get_smallest_height(arg2_subtrees)
+
+                                distances.append(get_tree_distance(arg1_subtree, arg2_subtree))
+
+                                if mention_counter == len(mentions)-1:
+                                    return distances
+
+                                mention_counter += 1
+                                break
+                    mention_counter += 1
+                    distances.append(-1)
+
+                    if mention_counter == len(mentions) -1:
+                        return distances
+                    prev_mention = mentions[mention_counter][0]
+    while len(mentions) != len(distances):
+        distances.append(-1)
+
+    return distances
+            # if not (found_m1 and found_m2) and not mention_counter == 0:
+            #     distances.append(-1)
+            #     if mention_counter == len(mentions) - 1:
+            #         return distances
+
+def get_tree_distance(arg1_subtree, arg2_subtree):
+    arg1_parents = get_parents(arg1_subtree)
+    arg2_parents = get_parents(arg2_subtree)
+
+    p1_counter = 1
+    p2_counter = 1
+    for parent1 in arg1_parents:
+        for parent2 in arg2_parents:
+            if parent1 == parent2:
+                return p1_counter + p2_counter
+            p2_counter += 1
+        p2_counter += 1
+
+    return p1_counter + p2_counter
+
+def get_parents(subtree):
+    parents = []
+    # if subtree == subtree.root():
+    #     parents.append('ROOT')
+    #     return parents
+
+    while subtree.parent() != None:
+        parents.append(subtree.parent())
+        subtree = subtree.parent()
+
+
+    return parents
+
+
+def get_smallest_height(subtrees):
+    height = 100000
+    lowest_subtree = None
+    for subtree in subtrees:
+        if subtree.height() < height:
+            height = subtree.height()
+            lowest_subtree = subtree
+    return height, lowest_subtree
+
+
+
 
 def open_context_file(file, mentions):
 
@@ -136,7 +242,7 @@ def rel_to_tokenized(string):
 # write all features to file
 def write_to_file(path, gold_file, train=True):
     file_out = open(path, 'w')
-    relations, words, types, word_features = read_train_gold(gold_file)
+    relations, words, types, word_features, distances = read_train_gold(gold_file)
     pos = read_pos_files(postagged_path)
     print(pos)
     for x in range(len(relations)-1):
@@ -154,6 +260,8 @@ def write_to_file(path, gold_file, train=True):
                 file_out.write(key + '=' + str(word_features[x][key]) +  ' ')
             else:
                 file_out.write(key + '="' + str(word_features[x][key]) +  '" ')
+
+        file_out.write('tree_distance=' + str(distances[x]) + " ")
 
 
         ### key error: eg. Bshar_Assad (b/c "Bshar_Assad" is one word in rel-trainset.gold, but in postagged files, they are "Bshar" and "Assad" )
