@@ -199,7 +199,8 @@ def open_context_file(file, mentions):
     word_features['arg2_context-1'] = -1
     word_features['arg2_context+1'] = -1
     # word_features['inbetween_context-words'] = inbetween_words
-    word_features['inbetween_context-distance'] = find_bucket(inbetween_counter)
+    word_features['inbetween_context-distance'] = inbetween_counter
+    # word_features['inbetween_context-distance'] = find_bucket(inbetween_counter)
 
     return word_features
 
@@ -336,10 +337,6 @@ def write_to_file(path, gold_file, train=True):
                 file_out.write(key + '="' + str(word_features[x][key]) +  '" ')
 
         file_out.write('tree_distance=' + str(distances[x]) + " ")
-
-
-        ### key error: eg. Bshar_Assad (b/c "Bshar_Assad" is one word in rel-trainset.gold, but in postagged files, they are "Bshar" and "Assad" )
-        #file_out.write("arg1_pos=" + pos[arg1] + " " + "arg2_pos=" + pos[arg2] + " ")
         file_out.write("\n")
 
 # test_parse = "(S1 (S (NP (DT The) (JJ following) (NNS photos)) (VP (VBP have) (VP (VBN been) (VP (VBN sent) (PP (IN as) (NP (NP (NN part)) (PP (IN of) (NP (NP (DT The) (NNP New) (NNP York) (NNPS Times) (POS ')) (NNS Circuits))))) (NP (NNP Photo) (NN Package)) (, ,) (S (VP (VBG moving) (NP (NNP Wednesday)) (, ,) (NP (CD 11))))))) (. .)))"
